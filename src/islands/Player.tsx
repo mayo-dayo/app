@@ -1,0 +1,1550 @@
+import type {
+  Accessor,
+  Component,
+  JSX,
+} from "solid-js";
+
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
+
+import {
+  makeAudio,
+} from "@solid-primitives/audio";
+
+import {
+  createContextProvider,
+  MultiProvider,
+} from "@solid-primitives/context";
+
+import {
+  makeEventListener,
+} from "@solid-primitives/event-listener";
+
+import {
+  createInfiniteScroll,
+} from "@solid-primitives/pagination";
+
+import Hammer from "hammerjs";
+
+import FadeIn from "@/components/FadeIn";
+
+import {
+  database_audio_get_audio_path,
+  database_audio_get_thumbnail_path,
+  database_audio_thumbnail_sizes,
+} from "@/database/audio";
+
+import {
+  actions,
+} from "astro:actions";
+
+import type {
+  read_audio,
+} from "@/actions/audio";
+
+type player_audio =
+  //
+  & Pick<
+    //
+    read_audio,
+    //
+    | "id"
+    //
+    | "has_thumbnail"
+    //
+    | "processing"
+    //
+    | "processing_state"
+  >
+  //
+  & {
+    duration?:
+      //
+      string;
+
+    artist?:
+      //
+      string;
+
+    album?:
+      //
+      string;
+
+    title?:
+      //
+      string;
+  };
+
+const player_audio_create =
+  //
+  (
+    {
+      id,
+
+      has_thumbnail,
+
+      file_name,
+
+      tags,
+
+      duration,
+
+      processing,
+
+      processing_state,
+    }:
+      //
+      read_audio,
+  ): player_audio => {
+    const parse_tags =
+      //
+      (): Pick<
+        //
+        player_audio,
+        //
+        | "artist"
+        //
+        | "album"
+        //
+        | //
+        "title"
+      > => {
+        let artist;
+
+        let album;
+
+        let title;
+
+        if (tags) {
+          const map =
+            //
+            new Map(
+              //
+              (JSON.parse(
+                tags,
+              ) as string[][])
+                //
+                .map(([
+                  k,
+
+                  v,
+                ]) => [
+                  k.toLowerCase(),
+
+                  v,
+                ]),
+            );
+
+          artist =
+            //
+            map.get(
+              "artist",
+            );
+
+          album =
+            //
+            map.get(
+              "album",
+            );
+
+          title =
+            //
+            map.get(
+              "title",
+            );
+        }
+
+        if (title === undefined) {
+          title =
+            //
+            file_name;
+        }
+
+        return {
+          artist,
+
+          album,
+
+          title,
+        };
+      };
+
+    const format_duration =
+      //
+      (): Pick<player_audio, "duration"> | undefined => {
+        if (duration === null) {
+          return;
+        }
+
+        const hours =
+          //
+          Math.floor(
+            duration / 3600,
+          );
+
+        const minutes =
+          //
+          Math.floor(
+            (duration % 3600) / 60,
+          );
+
+        const seconds =
+          //
+          duration % 60;
+
+        const pad =
+          //
+          (
+            num:
+              //
+              number,
+          ) =>
+            String(num)
+              //
+              .padStart(
+                //
+                2,
+                //
+                "0",
+              );
+
+        return {
+          duration: (
+            hours > 0
+              //
+              ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+              //
+              : `${pad(minutes)}:${pad(seconds)}`
+          ),
+        };
+      };
+
+    return {
+      id,
+
+      has_thumbnail,
+
+      processing,
+
+      processing_state,
+
+      ...parse_tags(),
+
+      ...format_duration(),
+    };
+  };
+
+export const player_audio_render_thumbnail =
+  //
+  (
+    audio:
+      //
+      Pick<
+        //
+        player_audio,
+        //
+        | "id"
+        //
+        | "has_thumbnail"
+      >,
+  ): JSX.Element => (
+    audio.has_thumbnail
+      ? (
+        <img
+          //
+          class="w-8 h-8 flex-none rounded"
+          //
+          src={
+            //
+            database_audio_get_thumbnail_path(
+              //
+              audio,
+              //
+              "64",
+            )
+          }
+          //
+          alt=""
+          //
+          decoding="async"
+        />
+      )
+      : (
+        <svg
+          //
+          class="w-8 h-8 flex-none fill-zinc-300"
+          //
+          viewBox="0 0 24 24"
+        >
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8zm2 11h-3v3.75c0 1.24-1.01 2.25-2.25 2.25S8.5 17.99 8.5 16.75s1.01-2.25 2.25-2.25c.46 0 .89.14 1.25.38V11h4zm-3-4V3.5L18.5 9z">
+          </path>
+        </svg>
+      )
+  );
+
+const player_audio_render: Component<
+  {
+    self:
+      //
+      Accessor<
+        player_audio
+      >;
+  }
+> =
+  //
+  ({
+    self,
+  }) => {
+    const playable =
+      //
+      () => {
+        const {
+          processing,
+
+          processing_state,
+        } = self();
+
+        return processing === 0 && processing_state !== 1;
+      };
+
+    const menu =
+      //
+      use_definite_menu();
+
+    const player =
+      //
+      use_definite_player();
+
+    const open_menu =
+      //
+      (
+        position:
+          //
+          position,
+      ) =>
+        menu.set_open(
+          {
+            audio:
+              //
+              self,
+
+            position,
+          },
+        );
+
+    const handle_context_menu =
+      //
+      (
+        e:
+          //
+          MouseEvent,
+      ) => {
+        if (playable() === false) {
+          return;
+        }
+
+        e.preventDefault();
+
+        open_menu({
+          x:
+            //
+            e.clientX,
+
+          y:
+            //
+            e.clientY,
+        });
+      };
+
+    const handle_press =
+      //
+      (
+        e:
+          //
+          HammerInput,
+      ) => {
+        if (playable() === false) {
+          return;
+        }
+
+        if (
+          e.pointerType !== "mouse"
+        ) {
+          open_menu({
+            x:
+              //
+              e.center.x,
+
+            y:
+              //
+              e.center.y,
+          });
+        }
+      };
+
+    const handle_tap =
+      //
+      () => {
+        if (playable() === false) {
+          return;
+        }
+
+        player.play(
+          self(),
+        );
+      };
+
+    const handle_ref =
+      //
+      (
+        ref:
+          //
+          HTMLDivElement,
+      ) => {
+        const hammer =
+          //
+          new Hammer(ref);
+
+        onCleanup(() =>
+          //
+          hammer.destroy()
+        );
+
+        hammer.on(
+          //
+          "press",
+          //
+          handle_press,
+        );
+
+        hammer.on(
+          //
+          "tap",
+          //
+          handle_tap,
+        );
+      };
+
+    const inner =
+      //
+      () => {
+        const {
+          id,
+
+          has_thumbnail,
+
+          title,
+
+          processing,
+
+          processing_state,
+
+          artist,
+
+          duration,
+        } = self();
+
+        return (
+          <div
+            // dprint-ignore
+            class={`flex gap-3 p-3 select-none ${playable() ? "cursor-pointer rounded transition hover:bg-zinc-900 active:bg-zinc-800" : "opacity-60"}`}
+            //
+            ref={handle_ref}
+            //
+            oncontextmenu={handle_context_menu}
+          >
+            {
+              //
+              player_audio_render_thumbnail(
+                {
+                  id,
+
+                  has_thumbnail,
+                },
+              )
+            }
+
+            <div class="mr-auto">
+              <h1 class="line-clamp-1 break-all">
+                {title}
+              </h1>
+
+              <div class="line-clamp-1 break-all text-zinc-400">
+                {
+                  //
+                  processing === 0
+                    //
+                    ? processing_state === 1
+                      //
+                      ? <>Unable to process this file.</>
+                      //
+                      : artist
+                    //
+                    : artist ?? <>Processing...</>
+                }
+              </div>
+            </div>
+
+            {duration && (
+              <div class="w-8 h-8 flex-none content-center text-zinc-400">
+                {duration}
+              </div>
+            )}
+          </div>
+        );
+      };
+
+    return inner();
+  };
+
+const [
+  PlayerProvider,
+
+  use_player,
+] =
+  //
+  createContextProvider(() => {
+    const [
+      queue,
+
+      set_queue,
+    ] =
+      //
+      createSignal<
+        player_audio[]
+      >(
+        [],
+      );
+
+    const cursor =
+      //
+      createMemo(() => {
+        const current_queue =
+          //
+          queue();
+
+        const [
+          index,
+
+          set_index,
+        ] =
+          //
+          createSignal(
+            0,
+          );
+
+        const [
+          has_next_track,
+
+          set_has_next_track,
+        ] =
+          //
+          createSignal(
+            false,
+          );
+
+        const [
+          has_previous_track,
+
+          set_has_previous_track,
+        ] =
+          //
+          createSignal(
+            false,
+          );
+
+        const sync_has_next_track =
+          //
+          (
+            index:
+              //
+              number,
+          ) =>
+            set_has_next_track(
+              index < queue().length - 1,
+            );
+
+        const sync_has_previous_track =
+          //
+          (
+            index:
+              //
+              number,
+          ) =>
+            set_has_previous_track(
+              index > 0,
+            );
+
+        const next_track =
+          //
+          () =>
+            set_index(
+              index => index + 1,
+            );
+
+        const previous_track =
+          //
+          () =>
+            set_index(
+              index => index - 1,
+            );
+
+        createEffect(() => {
+          const current_index =
+            //
+            index();
+
+          sync_has_next_track(
+            current_index,
+          );
+
+          sync_has_previous_track(
+            current_index,
+          );
+        });
+
+        createEffect(() => {
+          const current_has_next_track =
+            //
+            has_next_track();
+
+          const media_session =
+            //
+            navigator.mediaSession;
+
+          if (media_session) {
+            media_session.setActionHandler(
+              //
+              "nexttrack",
+              //
+              current_has_next_track ? next_track : null,
+            );
+          }
+        });
+
+        createEffect(() => {
+          const current_has_previous_track =
+            //
+            has_previous_track();
+
+          const media_session =
+            //
+            navigator.mediaSession;
+
+          if (media_session) {
+            media_session.setActionHandler(
+              //
+              "previoustrack",
+              //
+              current_has_previous_track ? previous_track : null,
+            );
+          }
+        });
+
+        const current_track =
+          //
+          createMemo(() => {
+            const current_index =
+              //
+              index();
+
+            const player_audio =
+              //
+              current_queue[
+                current_index
+              ];
+
+            if (player_audio === undefined) {
+              return;
+            }
+
+            const {
+              id,
+
+              has_thumbnail,
+
+              title,
+
+              artist,
+
+              album,
+            } = player_audio;
+
+            const media_session =
+              //
+              navigator.mediaSession;
+
+            if (media_session) {
+              const artwork =
+                //
+                has_thumbnail
+                  //
+                  ? database_audio_thumbnail_sizes
+                    //
+                    .map(size => {
+                      return {
+                        src:
+                          //
+                          database_audio_get_thumbnail_path(
+                            //
+                            { id },
+                            //
+                            size,
+                          ),
+
+                        sizes: `${size}x${size}`,
+                      };
+                    })
+                  //
+                  : [];
+
+              media_session.metadata =
+                //
+                new MediaMetadata({
+                  title,
+
+                  artist,
+
+                  album,
+
+                  artwork,
+                });
+            }
+
+            const [
+              progress,
+
+              set_progress,
+            ] =
+              //
+              createSignal(
+                0,
+              );
+
+            const [
+              paused,
+
+              set_paused,
+            ] =
+              //
+              createSignal(
+                false,
+              );
+
+            const audio_element =
+              //
+              makeAudio(
+                //
+                database_audio_get_audio_path(
+                  {
+                    id,
+                  },
+                ),
+                //
+                {
+                  timeupdate:
+                    //
+                    () =>
+                      set_progress(
+                        (audio_element.currentTime / audio_element.duration) * 100,
+                      ),
+
+                  pause:
+                    //
+                    () =>
+                      set_paused(
+                        true,
+                      ),
+
+                  play:
+                    //
+                    () =>
+                      set_paused(
+                        false,
+                      ),
+                },
+              );
+
+            audio_element.play();
+
+            return {
+              player_audio,
+
+              progress,
+
+              paused,
+
+              audio_element,
+            };
+          });
+
+        return {
+          index,
+
+          current_track,
+
+          has_next_track,
+
+          has_previous_track,
+
+          next_track,
+
+          previous_track,
+
+          sync_has_next_track,
+
+          sync_has_previous_track,
+        };
+      });
+
+    const render =
+      //
+      () => {
+        const {
+          current_track,
+
+          has_next_track,
+
+          has_previous_track,
+
+          next_track,
+
+          previous_track,
+        } = cursor();
+
+        const tmp =
+          //
+          current_track();
+
+        if (tmp === undefined) {
+          return;
+        }
+
+        const {
+          player_audio: {
+            id,
+
+            has_thumbnail,
+
+            title,
+
+            artist,
+          },
+
+          progress,
+
+          paused,
+
+          audio_element,
+        } = tmp;
+
+        return (
+          <div class="fixed w-full left-0 bottom-0 select-none bg-zinc-950">
+            <div class="relative">
+              <div
+                //
+                class="absolute bg-zinc-800"
+                //
+                style={{
+                  width: `${progress()}%`,
+
+                  height: "1px",
+                }}
+              >
+              </div>
+
+              <div class="border-t border-zinc-900">
+                <div class="max-w-lg mx-auto flex gap-4 px-6 py-3">
+                  {
+                    //
+                    player_audio_render_thumbnail(
+                      //
+                      {
+                        //
+                        id,
+                        //
+                        has_thumbnail,
+                      },
+                    )
+                  }
+
+                  <div>
+                    <h1 class="line-clamp-1 break-all">
+                      {title}
+                    </h1>
+
+                    <div class="line-clamp-1 break-all text-zinc-400">
+                      {artist}
+                    </div>
+                  </div>
+
+                  <menu class="ml-auto my-auto flex gap-2">
+                    <li>
+                      <button
+                        // dprint-ignore
+                        class={`w-8 h-8 flex ${has_previous_track() ? "cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800" : ""}`.trim()}
+                        //
+                        onClick={has_previous_track() ? previous_track : undefined}
+                      >
+                        <svg
+                          // dprint-ignore
+                          class={`w-4 h-4 m-auto transition ${has_previous_track() ? "fill-zinc-300" : "fill-zinc-500"}`}
+                          //
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path>
+                        </svg>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button
+                        //
+                        class="w-8 h-8 flex cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800"
+                        //
+                        onClick={() => paused() ? audio_element.play() : audio_element.pause()}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 m-auto fill-zinc-300"
+                          //
+                          viewBox="0 0 24 24"
+                        >
+                          {paused() ? <path d="M8 5v14l11-7z"></path> : <path d="M6 19h4V5H6zm8-14v14h4V5z"></path>}
+                        </svg>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button
+                        // dprint-ignore
+                        class={`w-8 h-8 flex ${has_next_track() ? "cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800" : ""}`.trim()}
+                        //
+                        onClick={has_next_track() ? next_track : undefined}
+                      >
+                        <svg
+                          // dprint-ignore
+                          class={`w-4 h-4 m-auto transition ${has_next_track() ? "fill-zinc-300" : "fill-zinc-500"}`}
+                          //
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="m6 18 8.5-6L6 6zM16 6v12h2V6z"></path>
+                        </svg>
+                      </button>
+                    </li>
+                  </menu>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+    const idle =
+      //
+      (): boolean =>
+        cursor()
+          //
+          .current_track() === undefined;
+
+    const play =
+      //
+      (
+        audio:
+          //
+          player_audio,
+      ) =>
+        set_queue(
+          [audio],
+        );
+
+    const play_next =
+      //
+      (
+        audio:
+          //
+          player_audio,
+      ) => {
+        if (
+          idle()
+        ) {
+          return play(
+            audio,
+          );
+        }
+
+        const current_index =
+          //
+          cursor()
+            //
+            .index();
+
+        queue()
+          //
+          .splice(
+            //
+            current_index + 1,
+            //
+            0,
+            //
+            audio,
+          );
+
+        cursor()
+          //
+          .sync_has_next_track(
+            current_index,
+          );
+      };
+
+    const enqueue =
+      //
+      (
+        audio:
+          //
+          player_audio,
+      ) => {
+        if (
+          idle()
+        ) {
+          return play(
+            audio,
+          );
+        }
+
+        const current_index =
+          //
+          cursor()
+            //
+            .index();
+
+        queue()
+          //
+          .push(
+            audio,
+          );
+
+        cursor()
+          //
+          .sync_has_next_track(
+            //
+            current_index,
+          );
+      };
+
+    return {
+      render,
+
+      idle,
+
+      play,
+
+      play_next,
+
+      enqueue,
+    };
+  });
+
+const use_definite_player =
+  //
+  () => use_player()!;
+
+type position =
+  //
+  {
+    x: number;
+
+    y: number;
+  };
+
+const [
+  MenuProvider,
+
+  use_menu,
+] =
+  //
+  createContextProvider(() => {
+    const [
+      open,
+
+      set_open,
+    ] =
+      //
+      createSignal<
+        {
+          audio:
+            //
+            Accessor<
+              player_audio
+            >;
+
+          position:
+            //
+            position;
+        } | undefined
+      >();
+
+    const render =
+      //
+      () => {
+        const tmp =
+          //
+          open();
+
+        if (tmp === undefined) {
+          return;
+        }
+
+        const {
+          audio,
+
+          position: {
+            x,
+
+            y,
+          },
+        } = tmp;
+
+        let ref: HTMLMenuElement | undefined;
+
+        const handle_click =
+          //
+          (
+            e:
+              //
+              MouseEvent,
+          ) => {
+            if (ref) {
+              const rect =
+                //
+                ref.getBoundingClientRect();
+
+              // dprint-ignore
+              if (rect.top <= e.clientY && e.clientY <= rect.top + rect.height && rect.left <= e.clientX && e.clientX <= rect.left + rect.width) {
+                return;
+              }
+            }
+
+            set_open(
+              undefined,
+            );
+          };
+
+        makeEventListener(
+          //
+          document,
+          //
+          "click",
+          //
+          handle_click,
+          //
+          {
+            passive:
+              //
+              true,
+          },
+        );
+
+        const player =
+          //
+          use_definite_player();
+
+        const position =
+          //
+          createMemo(() => {
+            const padding_x =
+              //
+              32;
+
+            const padding_y =
+              //
+              player.idle()
+                //
+                ? 16
+                //
+                : 72;
+
+            const menu_w =
+              //
+              106;
+
+            const menu_h =
+              //
+              88;
+
+            const normalized_x =
+              //
+              Math.min(
+                //
+                x,
+                //
+                window.innerWidth - padding_x - menu_w,
+              );
+
+            const normalized_y =
+              //
+              Math.min(
+                //
+                y,
+                //
+                window.innerHeight - padding_y - menu_h,
+              );
+
+            const left =
+              //
+              `${normalized_x}px`;
+
+            const top =
+              //
+              `${normalized_y}px`;
+
+            return {
+              left,
+
+              top,
+            };
+          });
+
+        const handle_play_next =
+          //
+          () => {
+            player
+              //
+              .play_next(
+                audio(),
+              );
+
+            set_open(
+              undefined,
+            );
+          };
+
+        const handle_enqueue =
+          //
+          () => {
+            player
+              //
+              .enqueue(
+                audio(),
+              );
+
+            set_open(
+              undefined,
+            );
+          };
+
+        return (
+          <menu
+            //
+            class="fixed bg-zinc-950 border-zinc-900 divide-y divide-zinc-900 rounded"
+            //
+            style={position()}
+            //
+            ref={ref}
+          >
+            <li>
+              <button
+                //
+                class="w-full flex gap-2 py-3 pl-3 pr-4 items-center outline-none rounded-t select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800"
+                //
+                onClick={handle_play_next}
+              >
+                <svg
+                  //
+                  class="w-5 h-5 fill-zinc-300"
+                  //
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 10h11v2H3zm0-4h11v2H3zm0 8h7v2H3zm13-1v8l6-4z">
+                  </path>
+                </svg>
+
+                Play next
+              </button>
+            </li>
+
+            <li>
+              <button
+                //
+                class="w-full flex gap-2 py-3 pl-3 pr-4 items-center outline-none rounded-b select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800"
+                //
+                onClick={handle_enqueue}
+              >
+                <svg
+                  //
+                  class="w-5 h-5 fill-zinc-300"
+                  //
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M15 6H3v2h12zm0 4H3v2h12zM3 16h8v-2H3zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6z">
+                  </path>
+                </svg>
+
+                Enqueue
+              </button>
+            </li>
+          </menu>
+        );
+      };
+
+    return {
+      open,
+
+      render,
+
+      set_open,
+    };
+  });
+
+const use_definite_menu =
+  //
+  () => use_menu()!;
+
+const ProviderWrapper: Component =
+  //
+  () => (
+    <MultiProvider
+      values={[
+        PlayerProvider,
+
+        MenuProvider,
+      ]}
+    >
+      <List />
+    </MultiProvider>
+  );
+
+export default ProviderWrapper;
+
+const List: Component =
+  //
+  () => {
+    const convert_audio =
+      //
+      (
+        audio:
+          //
+          read_audio,
+      ) =>
+        createSignal(
+          player_audio_create(
+            audio,
+          ),
+        );
+
+    const fetch_page_with_signal =
+      //
+      (
+        number:
+          //
+          number,
+      ) =>
+        actions.audio.get_page.orThrow(
+          number,
+        ).then(page =>
+          page.map(
+            convert_audio,
+          )
+        );
+
+    const [
+      pages,
+
+      setEl,
+
+      {
+        end,
+
+        setPages,
+      },
+    ] = createInfiniteScroll(
+      fetch_page_with_signal,
+    );
+
+    onMount(() => {
+      const handle_swap = async () =>
+        //
+        setPages(
+          await fetch_page_with_signal(
+            0,
+          ),
+        );
+
+      makeEventListener(
+        //
+        document,
+        //
+        "astro:after-swap",
+        //
+        handle_swap,
+        //
+        {
+          passive: true,
+        },
+      );
+    });
+
+    const timers =
+      //
+      new Map();
+
+    onCleanup(() =>
+      timers.forEach(
+        clearInterval,
+      )
+    );
+
+    createEffect(() =>
+      pages()
+        //
+        .filter(
+          (
+            [
+              get,
+            ],
+          ) => {
+            const {
+              id,
+
+              processing,
+            }: player_audio =
+              //
+              get();
+
+            return processing === 1 && timers.has(id) === false;
+          },
+        )
+        //
+        .forEach(
+          (
+            [
+              get,
+
+              update,
+            ],
+          ) => {
+            const {
+              id,
+            } = get();
+
+            const poll =
+              //
+              async () => {
+                const fresh =
+                  //
+                  await actions.audio.get_one.orThrow(id);
+
+                if (
+                  fresh === null || fresh.processing === 0
+                ) {
+                  clearInterval(
+                    timer,
+                  );
+
+                  timers.delete(
+                    id,
+                  );
+                }
+
+                const {
+                  processing,
+
+                  processing_state,
+                } = get();
+
+                if (
+                  fresh
+                  && (fresh.processing !== processing || fresh.processing !== processing_state)
+                ) {
+                  update(
+                    player_audio_create(
+                      fresh,
+                    ),
+                  );
+                }
+              };
+
+            const timer =
+              //
+              setInterval(
+                //
+                poll,
+                //
+                1000,
+              );
+
+            timers.set(
+              //
+              id,
+              //
+              timer,
+            );
+          },
+        )
+    );
+
+    const menu =
+      //
+      use_definite_menu();
+
+    const player =
+      //
+      use_definite_player();
+
+    return (
+      <>
+        <ol class={`grid gap-1 px-2 ${player.idle() ? "" : "pb-14"}`.trim()}>
+          <For each={pages()}>
+            {(
+              //
+              [
+                audio,
+              ],
+              //
+              index,
+            ) => (
+              <li>
+                <FadeIn
+                  //
+                  duration={750}
+                  //
+                  delay={index() * 25}
+                >
+                  {
+                    //
+                    player_audio_render({
+                      self:
+                        //
+                        audio,
+                    })
+                  }
+                </FadeIn>
+              </li>
+            )}
+          </For>
+
+          <Show when={!end()}>
+            <div
+              // @ts-ignore
+              ref={setEl}
+            />
+          </Show>
+        </ol>
+
+        {menu
+          //
+          .render()}
+
+        {player
+          //
+          .render()}
+      </>
+    );
+  };

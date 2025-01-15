@@ -1,0 +1,5 @@
+.astro
+.data
+dist
+node_modules
+
