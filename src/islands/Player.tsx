@@ -454,7 +454,7 @@ const player_audio_render: Component<
         return (
           <div
             // dprint-ignore
-            class={`flex gap-3 p-3 select-none ${playable() ? "cursor-pointer rounded transition hover:bg-zinc-900 active:bg-zinc-800" : "opacity-60"}`}
+            class={`flex gap-3 select-none p-3 ${playable() ? "cursor-pointer rounded transition hover:bg-zinc-900 active:bg-zinc-800" : "opacity-60"}`}
             //
             ref={handle_ref}
             //
@@ -862,101 +862,99 @@ const [
         } = tmp;
 
         return (
-          <div class="fixed w-full left-0 bottom-0 select-none bg-zinc-950">
-            <div class="relative">
-              <div
-                //
-                class="absolute bg-zinc-800"
-                //
-                style={{
-                  width: `${progress()}%`,
+          <div class="fixed relaitve w-full left-0 bottom-0 select-none bg-zinc-950">
+            <div
+              //
+              class="absolute bg-zinc-800"
+              //
+              style={{
+                width: `${progress()}%`,
 
-                  height: "1px",
-                }}
-              >
-              </div>
+                height: "1px",
+              }}
+            >
+            </div>
 
-              <div class="border-t border-zinc-900">
-                <div class="max-w-lg mx-auto flex gap-4 px-6 py-3">
-                  {
+            <div class="px-4 py-3 border-t border-zinc-900">
+              <div class="px-3 max-w-lg mx-auto flex gap-4">
+                {
+                  //
+                  player_audio_render_thumbnail(
                     //
-                    player_audio_render_thumbnail(
+                    {
                       //
-                      {
-                        //
-                        id,
-                        //
-                        has_thumbnail,
-                      },
-                    )
-                  }
+                      id,
+                      //
+                      has_thumbnail,
+                    },
+                  )
+                }
 
-                  <div>
-                    <h1 class="line-clamp-1 break-all">
-                      {title}
-                    </h1>
+                <div>
+                  <h1 class="line-clamp-1 break-all">
+                    {title}
+                  </h1>
 
-                    <div class="line-clamp-1 break-all text-zinc-400">
-                      {artist}
-                    </div>
+                  <div class="line-clamp-1 break-all text-zinc-400">
+                    {artist}
                   </div>
-
-                  <menu class="ml-auto my-auto flex gap-2">
-                    <li>
-                      <button
-                        // dprint-ignore
-                        class={`w-8 h-8 flex ${has_previous_track() ? "cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800" : ""}`.trim()}
-                        //
-                        onClick={has_previous_track() ? previous_track : undefined}
-                      >
-                        <svg
-                          // dprint-ignore
-                          class={`w-4 h-4 m-auto transition ${has_previous_track() ? "fill-zinc-300" : "fill-zinc-500"}`}
-                          //
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path>
-                        </svg>
-                      </button>
-                    </li>
-
-                    <li>
-                      <button
-                        //
-                        class="w-8 h-8 flex cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800"
-                        //
-                        onClick={() => paused() ? audio_element.play() : audio_element.pause()}
-                      >
-                        <svg
-                          //
-                          class="w-4 h-4 m-auto fill-zinc-300"
-                          //
-                          viewBox="0 0 24 24"
-                        >
-                          {paused() ? <path d="M8 5v14l11-7z"></path> : <path d="M6 19h4V5H6zm8-14v14h4V5z"></path>}
-                        </svg>
-                      </button>
-                    </li>
-
-                    <li>
-                      <button
-                        // dprint-ignore
-                        class={`w-8 h-8 flex ${has_next_track() ? "cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800" : ""}`.trim()}
-                        //
-                        onClick={has_next_track() ? next_track : undefined}
-                      >
-                        <svg
-                          // dprint-ignore
-                          class={`w-4 h-4 m-auto transition ${has_next_track() ? "fill-zinc-300" : "fill-zinc-500"}`}
-                          //
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="m6 18 8.5-6L6 6zM16 6v12h2V6z"></path>
-                        </svg>
-                      </button>
-                    </li>
-                  </menu>
                 </div>
+
+                <menu class="ml-auto my-auto flex gap-2">
+                  <li>
+                    <button
+                      // dprint-ignore
+                      class={`w-8 h-8 flex ${has_previous_track() ? "cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800" : ""}`.trim()}
+                      //
+                      onClick={has_previous_track() ? previous_track : undefined}
+                    >
+                      <svg
+                        // dprint-ignore
+                        class={`w-4 h-4 m-auto transition ${has_previous_track() ? "fill-zinc-300" : "fill-zinc-500"}`}
+                        //
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path>
+                      </svg>
+                    </button>
+                  </li>
+
+                  <li>
+                    <button
+                      //
+                      class="w-8 h-8 flex cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800"
+                      //
+                      onClick={() => paused() ? audio_element.play() : audio_element.pause()}
+                    >
+                      <svg
+                        //
+                        class="w-4 h-4 m-auto fill-zinc-300"
+                        //
+                        viewBox="0 0 24 24"
+                      >
+                        {paused() ? <path d="M8 5v14l11-7z"></path> : <path d="M6 19h4V5H6zm8-14v14h4V5z"></path>}
+                      </svg>
+                    </button>
+                  </li>
+
+                  <li>
+                    <button
+                      // dprint-ignore
+                      class={`w-8 h-8 flex ${has_next_track() ? "cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800" : ""}`.trim()}
+                      //
+                      onClick={has_next_track() ? next_track : undefined}
+                    >
+                      <svg
+                        // dprint-ignore
+                        class={`w-4 h-4 m-auto transition ${has_next_track() ? "fill-zinc-300" : "fill-zinc-500"}`}
+                        //
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="m6 18 8.5-6L6 6zM16 6v12h2V6z"></path>
+                      </svg>
+                    </button>
+                  </li>
+                </menu>
               </div>
             </div>
           </div>
@@ -1516,7 +1514,7 @@ const List: Component =
 
     return (
       <>
-        <ol class={`grid gap-1 px-2 ${player.idle() ? "" : "pb-14"}`.trim()}>
+        <ol class={`grid gap-1 ${player.idle() ? "" : "pb-14"}`.trim()}>
           <For each={pages()}>
             {(
               //
