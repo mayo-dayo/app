@@ -1126,53 +1126,25 @@ const [
           },
         } = tmp;
 
-        let ref: HTMLMenuElement | undefined;
+        const [
+          position,
 
-        const handle_click =
-          //
-          (
-            e:
-              //
-              MouseEvent,
-          ) => {
-            if (ref) {
-              const rect =
-                //
-                ref.getBoundingClientRect();
-
-              // dprint-ignore
-              if (rect.top <= e.clientY && e.clientY <= rect.top + rect.height && rect.left <= e.clientX && e.clientX <= rect.left + rect.width) {
-                return;
-              }
-            }
-
-            set_open(
-              undefined,
-            );
-          };
-
-        makeEventListener(
-          //
-          document,
-          //
-          "click",
-          //
-          handle_click,
-          //
+          set_position,
+        ] = createSignal(
           {
-            passive:
+            left:
               //
-              true,
+              "0px",
+            top:
+              //
+              "0px",
           },
         );
 
-        const player =
-          //
-          use_definite_player();
+        let ref: HTMLMenuElement | undefined;
 
-        const position =
-          //
-          createMemo(() => {
+        onMount(() => {
+          if (ref) {
             const padding_x =
               //
               32;
@@ -1187,11 +1159,11 @@ const [
 
             const menu_w =
               //
-              106;
+              ref.clientWidth;
 
             const menu_h =
               //
-              88;
+              ref.clientHeight;
 
             const normalized_x =
               //
@@ -1219,12 +1191,55 @@ const [
               //
               `${normalized_y}px`;
 
-            return {
+            set_position({
               left,
 
               top,
-            };
-          });
+            });
+          }
+        });
+
+        const handle_click =
+          //
+          (
+            e:
+              //
+              MouseEvent,
+          ) => {
+            if (ref) {
+              const rect =
+                //
+                ref.getBoundingClientRect();
+
+              // dprint-ignore
+              if (rect.top <= e.clientY && e.clientY <= rect.top + rect.height && rect.left <= e.clientX && e.clientX <= rect.left + rect.width) {
+                return;
+              }
+
+              set_open(
+                undefined,
+              );
+            }
+          };
+
+        makeEventListener(
+          //
+          document,
+          //
+          "click",
+          //
+          handle_click,
+          //
+          {
+            passive:
+              //
+              true,
+          },
+        );
+
+        const player =
+          //
+          use_definite_player();
 
         const handle_play_next =
           //
