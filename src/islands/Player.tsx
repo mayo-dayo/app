@@ -537,7 +537,14 @@ const [
         ] =
           //
           createSignal(
+            //
             0,
+            //
+            {
+              equals:
+                //
+                false,
+            },
           );
 
         const [
@@ -749,6 +756,15 @@ const [
                 ),
                 //
                 {
+                  ended:
+                    //
+                    () =>
+                      has_next_track()
+                        //
+                        ? next_track()
+                        //
+                        : set_index(0),
+
                   timeupdate:
                     //
                     () =>
