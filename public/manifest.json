@@ -6,8 +6,8 @@
   "id": "mayo",
   "name": "Mayo",
   "orientation": "natural",
-  "start_url": "/music",
-  "theme_color": "rgb(212, 212, 216)",
+  "start_url": "/",
+  "theme_color": "rgb(9, 9, 11)",
   "icons": [
     {
       "src": "windows11/SmallTile.scale-100.png",
