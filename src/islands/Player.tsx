@@ -617,43 +617,37 @@ const [
           );
         });
 
-        createEffect(() => {
-          const current_has_next_track =
-            //
-            has_next_track();
+        const media_session =
+          //
+          navigator.mediaSession;
 
-          const media_session =
-            //
-            navigator.mediaSession;
-
-          if (media_session) {
+        if (media_session) {
+          createEffect(() => {
             media_session.setActionHandler(
               //
               "nexttrack",
               //
-              current_has_next_track ? next_track : null,
+              has_next_track()
+                //
+                ? next_track
+                //
+                : null,
             );
-          }
-        });
+          });
 
-        createEffect(() => {
-          const current_has_previous_track =
-            //
-            has_previous_track();
-
-          const media_session =
-            //
-            navigator.mediaSession;
-
-          if (media_session) {
+          createEffect(() => {
             media_session.setActionHandler(
               //
               "previoustrack",
               //
-              current_has_previous_track ? previous_track : null,
+              has_previous_track()
+                //
+                ? previous_track
+                //
+                : null,
             );
-          }
-        });
+          });
+        }
 
         const current_track =
           //
@@ -684,11 +678,156 @@ const [
               album,
             } = player_audio;
 
-            const media_session =
+            const [
+              progress,
+
+              set_progress,
+            ] =
               //
-              navigator.mediaSession;
+              createSignal(
+                0,
+              );
+
+            const [
+              paused,
+
+              set_paused,
+            ] =
+              //
+              createSignal(
+                false,
+              );
+
+            const handle_ended =
+              //
+              () =>
+                has_next_track()
+                  //
+                  ? next_track()
+                  //
+                  : set_index(0);
+
+            const handle_timeupdate =
+              //
+              () =>
+                set_progress(
+                  (audio_element.currentTime / audio_element.duration) * 100,
+                );
+
+            const handle_pause =
+              //
+              () =>
+                set_paused(
+                  true,
+                );
+
+            const handle_play =
+              //
+              () =>
+                set_paused(
+                  false,
+                );
+
+            const audio_element =
+              //
+              makeAudio(
+                //
+                database_audio_get_audio_path(
+                  {
+                    id,
+                  },
+                ),
+                //
+                {
+                  ended:
+                    //
+                    handle_ended,
+
+                  timeupdate:
+                    //
+                    handle_timeupdate,
+
+                  pause:
+                    //
+                    handle_pause,
+
+                  play:
+                    //
+                    handle_play,
+                },
+              );
 
             if (media_session) {
+              media_session.setActionHandler(
+                //
+                "play",
+                //
+                () =>
+                  //
+                  audio_element.play(),
+              );
+
+              media_session.setActionHandler(
+                //
+                "pause",
+                //
+                () =>
+                  //
+                  audio_element.pause(),
+              );
+
+              media_session.setActionHandler(
+                //
+                "stop",
+                //
+                () =>
+                  //
+                  set_queue([]),
+              );
+
+              onCleanup(() => {
+                media_session.setActionHandler(
+                  //
+                  "pause",
+                  //
+                  null,
+                );
+
+                media_session.setActionHandler(
+                  //
+                  "play",
+                  //
+                  null,
+                );
+
+                media_session.setActionHandler(
+                  //
+                  "stop",
+                  //
+                  null,
+                );
+              });
+
+              createEffect(() => {
+                media_session.playbackState =
+                  //
+                  paused()
+                    //
+                    ? "paused"
+                    //
+                    : "playing";
+              });
+
+              media_session.playbackState =
+                //
+                "playing";
+
+              onCleanup(() =>
+                media_session.playbackState =
+                  //
+                  "none"
+              );
+
               const artwork =
                 //
                 has_thumbnail
@@ -723,70 +862,13 @@ const [
 
                   artwork,
                 });
+
+              onCleanup(() => {
+                media_session.metadata =
+                  //
+                  null;
+              });
             }
-
-            const [
-              progress,
-
-              set_progress,
-            ] =
-              //
-              createSignal(
-                0,
-              );
-
-            const [
-              paused,
-
-              set_paused,
-            ] =
-              //
-              createSignal(
-                false,
-              );
-
-            const audio_element =
-              //
-              makeAudio(
-                //
-                database_audio_get_audio_path(
-                  {
-                    id,
-                  },
-                ),
-                //
-                {
-                  ended:
-                    //
-                    () =>
-                      has_next_track()
-                        //
-                        ? next_track()
-                        //
-                        : set_index(0),
-
-                  timeupdate:
-                    //
-                    () =>
-                      set_progress(
-                        (audio_element.currentTime / audio_element.duration) * 100,
-                      ),
-
-                  pause:
-                    //
-                    () =>
-                      set_paused(
-                        true,
-                      ),
-
-                  play:
-                    //
-                    () =>
-                      set_paused(
-                        false,
-                      ),
-                },
-              );
 
             audio_element.play();
 
