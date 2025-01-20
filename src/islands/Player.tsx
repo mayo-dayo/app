@@ -410,7 +410,9 @@ const player_audio_render: Component<
       ) => {
         const hammer =
           //
-          new Hammer(ref);
+          new Hammer(
+            ref,
+          );
 
         onCleanup(() =>
           //
@@ -646,6 +648,12 @@ const [
                 //
                 : null,
             );
+
+            onCleanup(() =>
+              media_session.metadata =
+                //
+                null
+            );
           });
         }
 
@@ -862,12 +870,6 @@ const [
 
                   artwork,
                 });
-
-              onCleanup(() => {
-                media_session.metadata =
-                  //
-                  null;
-              });
             }
 
             audio_element.play();
@@ -1251,7 +1253,7 @@ const [
               //
               Math.min(
                 //
-                x,
+                x + 6,
                 //
                 window.innerWidth - padding_x - menu_w,
               );
@@ -1260,7 +1262,7 @@ const [
               //
               Math.min(
                 //
-                y,
+                y + 6,
                 //
                 window.innerHeight - padding_y - menu_h,
               );
@@ -1293,14 +1295,39 @@ const [
                 //
                 ref.getBoundingClientRect();
 
-              // dprint-ignore
-              if (rect.top <= e.clientY && e.clientY <= rect.top + rect.height && rect.left <= e.clientX && e.clientX <= rect.left + rect.width) {
-                return;
-              }
+              const distance_y =
+                //
+                Math.max(
+                  //
+                  rect.top - e.clientY,
+                  //
+                  e.clientY - (rect.top + rect.height),
+                  //
+                  0,
+                );
 
-              set_open(
-                undefined,
-              );
+              const distance_x =
+                //
+                Math.max(
+                  //
+                  rect.left - e.clientX,
+                  //
+                  e.clientX - (rect.left + rect.width),
+                  //
+                  0,
+                );
+
+              const distance =
+                //
+                Math.sqrt(
+                  distance_x * distance_x + distance_y * distance_y,
+                );
+
+              if (distance > 12) {
+                set_open(
+                  undefined,
+                );
+              }
             }
           };
 
