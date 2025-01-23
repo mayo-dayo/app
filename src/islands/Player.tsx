@@ -960,7 +960,7 @@ const [
             </div>
 
             <div class="px-4 py-3 border-t border-zinc-900">
-              <div class="px-3 max-w-lg mx-auto flex gap-4">
+              <div class="px-3 max-w-md mx-auto flex gap-4">
                 {
                   //
                   player_audio_render_thumbnail(
