@@ -37,19 +37,16 @@ import {
 
 import Hammer from "hammerjs";
 
+import type {
+  database_audio,
+} from "@/mayo/common/database_audio";
+
 import {
   database_audio_get_stream_endpoint_path,
   database_audio_get_thumbnail_endpoint_path,
+  database_audio_page_size,
   database_audio_thumbnail_sizes,
 } from "@/mayo/common/database_audio";
-
-import type {
-  read_audio,
-} from "@/mayo/common/read_audio";
-
-import {
-  read_audio_page_size,
-} from "@/mayo/common/read_audio";
 
 import FadeIn from "@/mayo/client/FadeIn";
 
@@ -59,7 +56,7 @@ type player_audio =
   //
   & Pick<
     //
-    read_audio,
+    database_audio,
     //
     | "id"
     //
@@ -107,7 +104,7 @@ const player_audio_create =
       processing_state,
     }:
       //
-      read_audio,
+      database_audio,
   ): player_audio => {
     const parse_tags =
       //
@@ -1567,10 +1564,10 @@ type fetcher = {
     (
       id:
         //
-        read_audio["id"],
+        database_audio["id"],
     ) => Promise<
       //
-      read_audio | null
+      database_audio | null
     >;
 
   fetch_page:
@@ -1581,7 +1578,7 @@ type fetcher = {
         number,
     ) => Promise<
       //
-      read_audio[]
+      database_audio[]
     >;
 };
 
@@ -1652,7 +1649,7 @@ const fetcher_create_offline =
                       //
                       req.result
                         //
-                        ? req.result as read_audio
+                        ? req.result as database_audio
                         //
                         : null,
                     );
@@ -1707,18 +1704,18 @@ const fetcher_create_offline =
                       try {
                         cursor.advance(
                           //
-                          read_audio_page_size * page,
+                          database_audio_page_size * page,
                         );
 
                         while (
                           //
                           cursor.value
                           //
-                          && result.length < read_audio_page_size
+                          && result.length < database_audio_page_size
                         ) {
                           result.push(
                             //
-                            cursor.value as read_audio,
+                            cursor.value as database_audio,
                           );
 
                           cursor.continue();
@@ -1891,7 +1888,7 @@ const List: Component =
                 const poll =
                   //
                   async () => {
-                    const fresh: read_audio | null =
+                    const fresh: database_audio | null =
                       //
                       await fetcher()
                         //

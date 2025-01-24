@@ -18,12 +18,12 @@ import {
 } from "@/mayo/common/perms";
 
 import type {
-  read_audio,
-} from "@/mayo/common/read_audio";
+  database_audio,
+} from "@/mayo/common/database_audio";
 
 import {
-  read_audio_page_size,
-} from "@/mayo/common/read_audio";
+  database_audio_page_size,
+} from "@/mayo/common/database_audio";
 
 import {
   audio_processor_run,
@@ -225,9 +225,11 @@ export const audio =
 
                     id,
 
-                    file_name,
+                    uploader_id,
 
                     time_uploaded,
+
+                    file_name,
 
                     processing,
 
@@ -250,7 +252,7 @@ export const audio =
                     id = ?1
                 `)
                 //
-                .get(input) as read_audio | null;
+                .get(input) as database_audio | null;
 
             return audio;
           },
@@ -292,9 +294,11 @@ export const audio =
 
                     id,
 
-                    file_name,
+                    uploader_id,
 
                     time_uploaded,
+
+                    file_name,
 
                     processing,
 
@@ -327,10 +331,10 @@ export const audio =
                 //
                 .all(
                   //
-                  read_audio_page_size,
+                  database_audio_page_size,
                   //
-                  read_audio_page_size * input,
-                ) as read_audio[];
+                  database_audio_page_size * input,
+                ) as database_audio[];
 
             return page;
           },

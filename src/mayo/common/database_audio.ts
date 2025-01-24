@@ -52,6 +52,10 @@ export type database_audio =
       string | null;
   };
 
+export const database_audio_page_size =
+  //
+  32;
+
 export const database_audio_thumbnail_sizes =
   //
   [

@@ -46,7 +46,7 @@ const authentication =
     //
     next,
   ) => {
-    // 
+    //
     //
     // dprint-ignore
     const needs_authentication =
@@ -68,11 +68,11 @@ const authentication =
 
       ||  request.url.pathname.startsWith("/_actions");
 
-      //
-      //
-      //
-    // 
-    // 
+    //
+    //
+    //
+    //
+    //
     //
 
     if (needs_authentication === false) {
