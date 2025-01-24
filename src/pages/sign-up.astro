@@ -35,6 +35,10 @@ if (result?.data) {
 
   return Astro.redirect("/");
 }
+
+const invite_id =
+  //
+  Astro.url.searchParams.get("i");
 ---
 
 <Layout>
@@ -109,6 +113,8 @@ if (result?.data) {
 
         <input
           class="w-full h-10 font-sans px-2 rounded bg-transparent border border-zinc-900 focus:border-zinc-800 outline-none placeholder:text-zinc-900"
+
+          value={invite_id}
 
           type="password"
 
