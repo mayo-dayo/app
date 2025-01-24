@@ -3,7 +3,7 @@ import {
   actions,
 } from "astro:actions";
 
-import Layout from "@/Layout.astro";
+import Layout from "@/mayo/client/Layout.astro";
 
 const result =
   //
@@ -38,7 +38,10 @@ if (result?.data) {
 
 const invite_id =
   //
-  Astro.url.searchParams.get("i");
+  Astro.url.searchParams.get(
+    //
+    "i",
+  );
 ---
 
 <Layout>

@@ -9,6 +9,8 @@ import solidJs from "@astrojs/solid-js";
 import tailwind from "@astrojs/tailwind";
 
 export default defineConfig({
+  srcDir: "src/astro",
+
   output: "server",
 
   adapter: bun(),

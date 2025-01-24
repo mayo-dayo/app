@@ -1,50 +1,38 @@
 import {
+  z,
+} from "astro:schema";
+
+import {
   ActionError,
   defineAction,
 } from "astro:actions";
 
-import {
-  z,
-} from "astro:schema";
-
-import path from "node:path";
-
 import fs from "node:fs/promises";
 
 import {
-  audio_processor_run,
-} from "@/audio_processor";
+  incoming_id,
+} from "@/mayo/server/incoming";
 
 import {
-  incoming_id,
-} from "@/schema";
+  perms_can_upload,
+} from "@/mayo/common/perms";
 
 import type {
-  database_audio,
-} from "@/database";
+  read_audio,
+} from "@/mayo/common/read_audio";
 
-export type read_audio =
-  //
-  Pick<
-    //
-    database_audio,
-    //
-    | "id"
-    //
-    | "file_name"
-    //
-    | "processing"
-    //
-    | "processing_state"
-    //
-    | "has_thumbnail"
-    //
-    | "duration"
-    //
-    | "size"
-    //
-    | "tags"
-  >;
+import {
+  read_audio_page_size,
+} from "@/mayo/common/read_audio";
+
+import {
+  audio_processor_run,
+} from "@/mayo/server/audio_processor";
+
+import {
+  database_audio_get_directory_path,
+  database_audio_get_original_file_path,
+} from "@/mayo/server/database_audio";
 
 export const audio =
   //
@@ -88,7 +76,13 @@ export const audio =
               user,
             } = request.locals;
 
-            if (user === undefined) {
+            if (
+              user === undefined
+              //
+              || (
+                  user.perms & perms_can_upload
+                ) === 0
+            ) {
               throw new ActionError({
                 code: "UNAUTHORIZED",
 
@@ -115,28 +109,14 @@ export const audio =
                   //
                   file.name;
 
-                const directory_path =
-                  //
-                  path.join(
-                    //
-                    process.env.MAYO_DATA_PATH,
-                    //
-                    id,
-                  );
-
-                const file_path =
-                  //
-                  path.join(
-                    //
-                    directory_path,
-                    //
-                    file.name,
-                  );
-
                 try {
                   await Bun.write(
                     //
-                    file_path,
+                    database_audio_get_original_file_path({
+                      id,
+
+                      file_name,
+                    }),
                     //
                     file,
                   );
@@ -188,20 +168,24 @@ export const audio =
                     `failed to create an audio: ${e}`,
                   );
 
-                  fs.rm(
+                  fs
                     //
-                    directory_path,
-                    //
-                    {
-                      recursive:
-                        //
-                        true,
+                    .rm(
+                      //
+                      database_audio_get_directory_path({
+                        id,
+                      }),
+                      //
+                      {
+                        recursive:
+                          //
+                          true,
 
-                      force:
-                        //
-                        true,
-                    },
-                  );
+                        force:
+                          //
+                          true,
+                      },
+                    );
                 }
               });
 
@@ -230,9 +214,7 @@ export const audio =
               context: {
                 database,
               },
-            } =
-              //
-              request.locals;
+            } = request.locals;
 
             const audio =
               //
@@ -244,6 +226,8 @@ export const audio =
                     id,
 
                     file_name,
+
+                    time_uploaded,
 
                     processing,
 
@@ -299,10 +283,6 @@ export const audio =
               //
               request.locals;
 
-            const page_size =
-              //
-              32;
-
             const page =
               //
               database
@@ -313,6 +293,8 @@ export const audio =
                     id,
 
                     file_name,
+
+                    time_uploaded,
 
                     processing,
 
@@ -345,9 +327,9 @@ export const audio =
                 //
                 .all(
                   //
-                  page_size,
+                  read_audio_page_size,
                   //
-                  page_size * input,
+                  read_audio_page_size * input,
                 ) as read_audio[];
 
             return page;

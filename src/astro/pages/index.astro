@@ -5,11 +5,11 @@ import {
 
 import {
   perms_can_upload,
-} from "@/database";
+} from "@/mayo/common/perms";
 
-import Layout from "@/Layout.astro";
+import Layout from "@/mayo/client/Layout.astro";
 
-import Player from "@/islands/Player";
+import Player from "@/mayo/client/Player";
 
 const user =
   //
@@ -19,18 +19,26 @@ if (user === undefined) {
   throw new Error("Unauthorized");
 }
 
+let result;
+
 const can_upload =
   //
-  Boolean(
-    user.perms & perms_can_upload,
-  );
+  (
+    user.perms & perms_can_upload
+  ) !== 0;
 
-const result =
-  //
-  Astro.getActionResult(actions.audio.create);
+if (can_upload) {
+  result =
+    //
+    Astro.getActionResult(actions.audio.create);
 
-if (result && !result.error) {
-  return Astro.redirect("/");
+  if (
+    result
+    //
+    && !result.error
+  ) {
+    return Astro.redirect("/");
+  }
 }
 ---
 

@@ -1,23 +1,20 @@
-import type {
-  Database,
+import {
+  type Database,
 } from "bun:sqlite";
 
 import path from "node:path";
 
 import {
   database_connect_and_migrate,
-} from "@/database";
-
-import type {
-  audio_processor,
-} from "@/audio_processor";
+} from "@/mayo/server/database_connect_and_migrate";
 
 import {
+  type audio_processor,
   audio_processor_create,
   audio_processor_run,
-} from "@/audio_processor";
+} from "@/mayo/server/audio_processor";
 
-type context =
+export type context =
   //
   {
     database:
@@ -76,5 +73,3 @@ export const context_get_or_init =
 
     return context;
   };
-
-export default context;

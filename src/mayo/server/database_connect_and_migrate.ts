@@ -48,9 +48,7 @@ export const database_connect_and_migrate =
             number;
         };
 
-    switch (
-      user_version
-    ) {
+    switch (user_version) {
       case 0:
         db.transaction(() => {
           db.exec(`

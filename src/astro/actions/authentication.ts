@@ -1,26 +1,29 @@
 import {
+  z,
+} from "astro:schema";
+
+import {
   ActionError,
   defineAction,
 } from "astro:actions";
 
 import {
-  z,
-} from "astro:schema";
+  type database_invite,
+} from "@/mayo/common/database_invite";
+
+import {
+  type database_user,
+} from "@/mayo/common/database_user";
 
 import {
   sign,
-} from "@/crypto";
+} from "@/mayo/server/crypto";
 
 import {
   incoming_id,
   incoming_password,
   incoming_username,
-} from "@/schema";
-
-import type {
-  database_invite,
-  database_user,
-} from "@/database";
+} from "@/mayo/server/incoming";
 
 const make_token =
   //
@@ -91,20 +94,20 @@ export const authentication =
             const user = database
               //
               .query(`
-                  select 
+                select 
 
-                    id, 
+                  id, 
 
-                    password_hash 
+                  password_hash 
 
-                  from 
+                from 
 
-                    users 
+                  users 
 
-                  where 
+                where 
 
-                    name = ?1;
-                `)
+                  name = ?1;
+              `)
               //
               .get(username) as Pick<database_user, "id" | "password_hash"> | null;
 
@@ -122,7 +125,12 @@ export const authentication =
 
             const is_verified =
               //
-              await Bun.password.verify(password, user.password_hash);
+              await Bun.password.verify(
+                //
+                password,
+                //
+                user.password_hash,
+              );
 
             if (is_verified === false) {
               throw new ActionError({
@@ -308,7 +316,10 @@ export const authentication =
                         id = ?1;
                     `)
                     //
-                    .run(invite_id);
+                    .run(
+                      //
+                      invite_id,
+                    );
                 } else {
                   database
                     //
@@ -319,11 +330,11 @@ export const authentication =
 
                       set 
 
-                        uses  = ?1 
+                        uses = ?1 
 
                       where 
 
-                        id    = ?2;
+                        id = ?2;
                     `)
                     //
                     .run(

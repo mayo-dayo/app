@@ -2,22 +2,22 @@ import {
   z,
 } from "astro:schema";
 
-import type {
-  Database,
+import {
+  type Database,
 } from "bun:sqlite";
 
-import type {
-  database_audio,
-} from "@/database";
+import {
+  type database_audio,
+  database_audio_thumbnail_sizes,
+} from "@/mayo/common/database_audio";
 
 import {
-  database_audio_get_filesystem_directory_path,
-  database_audio_thumbnail_sizes,
-} from "@/database";
+  database_audio_get_original_file_path,
+  database_audio_get_streamable_file_path,
+  database_audio_get_thumbnail_file_path,
+} from "@/mayo/server/database_audio";
 
 import os from "node:os";
-
-import path from "node:path";
 
 export type audio_processor =
   //
@@ -266,9 +266,7 @@ const audio_processor_set_processing_state_error =
           id = ?1;
       `)
       //
-      .run(
-        audio_id,
-      );
+      .run(audio_id);
   };
 
 const audio_processor_get_metadata =
@@ -317,7 +315,6 @@ const audio_processor_get_metadata =
 
     // dprint-ignore
     const proc = Bun.spawn(
-      //
       [
         "ffprobe",
 
@@ -327,16 +324,8 @@ const audio_processor_get_metadata =
 
         "-show_entries", "format:stream_tags:stream=codec_type",
 
-        audio.file_name,
-      ], 
-      //
-      { 
-        cwd: 
-          //
-          database_audio_get_filesystem_directory_path(
-            audio
-          ),
-      }
+        database_audio_get_original_file_path(audio),
+      ]
     );
 
     switch (await proc.exited) {
@@ -446,10 +435,6 @@ const audio_processor_get_thumbnail =
       ...remaining
     ] = database_audio_thumbnail_sizes;
 
-    const cwd =
-      //
-      database_audio_get_filesystem_directory_path(audio);
-
     // dprint-ignore
     const proc = Bun.spawn(
       [
@@ -457,7 +442,7 @@ const audio_processor_get_thumbnail =
 
         "-loglevel", "quiet",
 
-        "-i", audio.file_name,
+        "-i", database_audio_get_original_file_path(audio),
 
         "-y",
 
@@ -465,8 +450,13 @@ const audio_processor_get_thumbnail =
 
         "-vf", `crop='if(gt(iw,ih),ih,iw)':'if(gt(iw,ih),ih,iw)',scale=${first}:${first}`,
 
-        `thumbnail-${first}.webp`,
-      ], { cwd }
+        database_audio_get_thumbnail_file_path(
+          //
+          audio, 
+          //
+          first
+        )
+      ]
     );
 
     let exit_code =
@@ -483,19 +473,29 @@ const audio_processor_get_thumbnail =
       ) {
         // dprint-ignore
         const proc = Bun.spawn(
-          [
+          [ 
             "ffmpeg",
 
             "-loglevel", "quiet",
 
-            "-i", `thumbnail-${database_audio_thumbnail_sizes[index]}.webp`,
+            "-i", database_audio_get_thumbnail_file_path(
+                    //
+                    audio, 
+                    //
+                    database_audio_thumbnail_sizes[index]
+                  ),
 
             "-y",
 
             "-vf", `scale=${size}:${size}`,
 
-            `thumbnail-${size}.webp`,
-          ], { cwd }
+            database_audio_get_thumbnail_file_path(
+              //
+              audio, 
+              //
+              size
+            )
+          ]
         );
 
         exit_code =
@@ -548,40 +548,40 @@ const audio_processor_transcode =
       //
       processor_audio,
   ) => {
-    const cwd =
+    const streamable_file_path =
       //
-      database_audio_get_filesystem_directory_path(audio);
+      database_audio_get_streamable_file_path(audio);
 
     // dprint-ignore
-    const proc = Bun.spawn(
-      [
-        "ffmpeg",
+    const proc = Bun.spawn([
+      "ffmpeg",
 
-        "-loglevel", "quiet",
+      "-loglevel", "quiet",
 
-        "-i", audio.file_name,
+      "-i", database_audio_get_original_file_path(audio),
 
-        "-y",
+      "-y",
 
-        "-map", "0:a",
+      "-map", "0:a",
 
-        "-c:a", "aac",
+      "-c:a", "aac",
 
-        "-b:a", "256k",
+      "-b:a", "256k",
 
-        "-ar", "44100",
+      "-ar", "44100",
 
-        "-movflags", "+faststart",
+      "-movflags", "+faststart",
 
-        "audio.mp4",
-     ], { cwd }
-   );
+      streamable_file_path
+   ]);
 
     switch (await proc.exited) {
       case 0:
-        const file = Bun.file(
-          path.join(cwd, "audio.mp4"),
-        );
+        const file =
+          //
+          Bun.file(
+            streamable_file_path,
+          );
 
         self.database
           //

@@ -1,14 +1,10 @@
-import type {
-  APIRoute,
+import {
+  type APIRoute,
 } from "astro";
 
 import {
   z,
 } from "astro:schema";
-
-import parseRange from "range-parser";
-
-import path from "node:path";
 
 import type {
   ReadStream,
@@ -22,17 +18,19 @@ import {
   stat,
 } from "node:fs/promises";
 
+import parseRange from "range-parser";
+
+import {
+  type database_audio,
+} from "@/mayo/common/database_audio";
+
+import {
+  database_audio_get_streamable_file_path,
+} from "@/mayo/server/database_audio";
+
 import {
   incoming_id,
-} from "@/schema";
-
-import type {
-  database_audio,
-} from "@/database";
-
-import {
-  database_audio_get_filesystem_directory_path,
-} from "@/database";
+} from "@/mayo/server/incoming";
 
 // Helper function to convert Node.js ReadStream to Web ReadableStream
 //
@@ -135,17 +133,9 @@ export const GET: APIRoute = async ({
 
   const file_path =
     //
-    path.join(
-      //
-      database_audio_get_filesystem_directory_path(
-        //
-        {
-          id,
-        },
-      ),
-      //
-      "audio.mp4",
-    );
+    database_audio_get_streamable_file_path({
+      id,
+    });
 
   const file_stat =
     //

@@ -1,8 +1,6 @@
 import type {
   database_user,
-} from "./user";
-
-import path from "node:path";
+} from "./database_user";
 
 export type database_audio =
   //
@@ -74,7 +72,7 @@ export const database_audio_thumbnail_sizes =
     "64",
   ] as const;
 
-export const database_audio_get_audio_path =
+export const database_audio_get_stream_endpoint_path =
   //
   (
     //
@@ -88,9 +86,9 @@ export const database_audio_get_audio_path =
         //
         "id"
       >,
-  ): string => `/endpoints/audio?id=${id}`;
+  ): string => `/endpoints/audio_stream?id=${id}`;
 
-export const database_audio_get_thumbnail_path =
+export const database_audio_get_thumbnail_endpoint_path =
   //
   (
     //
@@ -108,25 +106,4 @@ export const database_audio_get_thumbnail_path =
     size:
       //
       typeof database_audio_thumbnail_sizes[number],
-  ): string => `/endpoints/thumbnail?id=${id}&size=${size}`;
-
-export const database_audio_get_filesystem_directory_path =
-  //
-  (
-    {
-      id,
-    }:
-      //
-      Pick<
-        //
-        database_audio,
-        //
-        "id"
-      >,
-  ): string =>
-    path.join(
-      //
-      process.env.MAYO_DATA_PATH,
-      //
-      id,
-    );
+  ): string => `/endpoints/audio_thumbnail?id=${id}&size=${size}`;

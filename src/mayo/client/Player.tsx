@@ -1,3 +1,7 @@
+import {
+  actions,
+} from "astro:actions";
+
 import type {
   Accessor,
   Component,
@@ -33,21 +37,23 @@ import {
 
 import Hammer from "hammerjs";
 
-import FadeIn from "@/components/FadeIn";
-
 import {
-  database_audio_get_audio_path,
-  database_audio_get_thumbnail_path,
+  database_audio_get_stream_endpoint_path,
+  database_audio_get_thumbnail_endpoint_path,
   database_audio_thumbnail_sizes,
-} from "@/database/audio";
-
-import {
-  actions,
-} from "astro:actions";
+} from "@/mayo/common/database_audio";
 
 import type {
   read_audio,
-} from "@/actions/audio";
+} from "@/mayo/common/read_audio";
+
+import {
+  read_audio_page_size,
+} from "@/mayo/common/read_audio";
+
+import FadeIn from "@/mayo/client/FadeIn";
+
+import Switch from "@/mayo/client/Switch";
 
 type player_audio =
   //
@@ -113,8 +119,7 @@ const player_audio_create =
         //
         | "album"
         //
-        | //
-        "title"
+        | "title"
       > => {
         let artist;
 
@@ -263,7 +268,7 @@ export const player_audio_render_thumbnail =
           //
           src={
             //
-            database_audio_get_thumbnail_path(
+            database_audio_get_thumbnail_endpoint_path(
               //
               audio,
               //
@@ -648,11 +653,29 @@ const [
                 //
                 : null,
             );
+          });
 
-            onCleanup(() =>
-              media_session.metadata =
-                //
-                null
+          onCleanup(() => {
+            media_session.playbackState =
+              //
+              "none";
+
+            media_session.metadata =
+              //
+              null;
+
+            media_session.setActionHandler(
+              //
+              "nexttrack",
+              //
+              null,
+            );
+
+            media_session.setActionHandler(
+              //
+              "previoustrack",
+              //
+              null,
             );
           });
         }
@@ -713,7 +736,7 @@ const [
                   //
                   ? next_track()
                   //
-                  : set_index(0);
+                  : set_queue([]);
 
             const handle_timeupdate =
               //
@@ -740,11 +763,9 @@ const [
               //
               makeAudio(
                 //
-                database_audio_get_audio_path(
-                  {
-                    id,
-                  },
-                ),
+                database_audio_get_stream_endpoint_path({
+                  id,
+                }),
                 //
                 {
                   ended:
@@ -830,12 +851,6 @@ const [
                 //
                 "playing";
 
-              onCleanup(() =>
-                media_session.playbackState =
-                  //
-                  "none"
-              );
-
               const artwork =
                 //
                 has_thumbnail
@@ -846,7 +861,7 @@ const [
                       return {
                         src:
                           //
-                          database_audio_get_thumbnail_path(
+                          database_audio_get_thumbnail_endpoint_path(
                             //
                             { id },
                             //
@@ -1445,11 +1460,96 @@ const use_definite_menu =
   //
   () => use_menu()!;
 
+const [
+  IdbProvider,
+
+  use_idb,
+] =
+  //
+  createContextProvider((): Promise<
+    //
+    IDBDatabase
+  > => {
+    return new Promise((
+      //
+      resolve,
+      //
+      reject,
+    ) => {
+      const req =
+        //
+        indexedDB.open(
+          //
+          "player-offline-storage",
+          //
+          1,
+        );
+
+      req.onerror =
+        //
+        () =>
+          reject(
+            //
+            req.error,
+          );
+
+      req.onsuccess =
+        //
+        () =>
+          resolve(
+            //
+            req.result,
+          );
+
+      req.onupgradeneeded =
+        //
+        (e) => {
+          const idb =
+            //
+            req.result;
+
+          switch (e.oldVersion) {
+            case 0:
+              const audio_store =
+                //
+                idb.createObjectStore(
+                  //
+                  "audio",
+                  //
+                  {
+                    keyPath:
+                      //
+                      "id",
+                  },
+                );
+
+              audio_store.createIndex(
+                //
+                "time_uploaded",
+                //
+                "time_uploaded",
+              );
+
+              break;
+
+            default:
+              throw new Error("unexpected idb version");
+          }
+        };
+    });
+  });
+
+const use_definite_idb =
+  //
+  () => use_idb()!;
+
 const ProviderWrapper: Component =
   //
   () => (
     <MultiProvider
       values={[
+        IdbProvider,
+
         PlayerProvider,
 
         MenuProvider,
@@ -1461,36 +1561,248 @@ const ProviderWrapper: Component =
 
 export default ProviderWrapper;
 
+type fetcher = {
+  fetch_one:
+    //
+    (
+      id:
+        //
+        read_audio["id"],
+    ) => Promise<
+      //
+      read_audio | null
+    >;
+
+  fetch_page:
+    //
+    (
+      page:
+        //
+        number,
+    ) => Promise<
+      //
+      read_audio[]
+    >;
+};
+
+const fetcher_create_online =
+  //
+  (): fetcher => {
+    return {
+      fetch_one:
+        //
+        (
+          id,
+        ) =>
+          actions.audio.get_one.orThrow(
+            id,
+          ),
+
+      fetch_page:
+        //
+        (
+          page,
+        ) =>
+          actions.audio.get_page.orThrow(
+            page,
+          ),
+    };
+  };
+
+const fetcher_create_offline =
+  //
+  (): fetcher => {
+    return {
+      fetch_one:
+        //
+        (
+          id,
+        ) =>
+          use_definite_idb()
+            //
+            .then(idb =>
+              new Promise((
+                //
+                resolve,
+                //
+                reject,
+              ) => {
+                const req =
+                  //
+                  idb
+                    //
+                    .transaction("audio")
+                    //
+                    .objectStore("audio")
+                    //
+                    .get(id);
+
+                req.onerror =
+                  //
+                  () =>
+                    reject(
+                      //
+                      req.error,
+                    );
+
+                req.onsuccess =
+                  //
+                  () =>
+                    resolve(
+                      //
+                      req.result
+                        //
+                        ? req.result as read_audio
+                        //
+                        : null,
+                    );
+              })
+            ),
+
+      fetch_page:
+        //
+        (
+          //
+          page,
+        ) =>
+          use_definite_idb()
+            //
+            .then(idb =>
+              new Promise((
+                //
+                resolve,
+                //
+                reject,
+              ) => {
+                const req = idb
+                  //
+                  .transaction("audio")
+                  //
+                  .objectStore("audio")
+                  //
+                  .index("time_uploaded")
+                  //
+                  .openCursor(null, "prev");
+
+                req.onerror =
+                  //
+                  () =>
+                    reject(
+                      //
+                      req.error,
+                    );
+
+                req.onsuccess =
+                  //
+                  () => {
+                    const result =
+                      //
+                      [];
+
+                    const cursor =
+                      //
+                      req.result;
+
+                    if (cursor !== null) {
+                      try {
+                        cursor.advance(
+                          //
+                          read_audio_page_size * page,
+                        );
+
+                        while (
+                          //
+                          cursor.value
+                          //
+                          && result.length < read_audio_page_size
+                        ) {
+                          result.push(
+                            //
+                            cursor.value as read_audio,
+                          );
+
+                          cursor.continue();
+                        }
+                      } catch (e) {
+                        // Guard against `.advance` or `.continue` throwing
+                        // `InvalidStateError` ("thrown if the cursor is being iterated
+                        // or has iterated past its end").
+                      }
+                    }
+
+                    resolve(
+                      //
+                      result,
+                    );
+                  };
+              })
+            ),
+    };
+  };
+
 const List: Component =
   //
   () => {
-    const convert_audio =
-      //
-      (
-        audio:
-          //
-          read_audio,
-      ) =>
-        createSignal(
-          player_audio_create(
-            audio,
-          ),
-        );
+    const [
+      online,
 
-    const fetch_page_with_signal =
+      set_online,
+    ] = createSignal(
+      navigator.onLine,
+    );
+
+    makeEventListener(
+      //
+      window,
+      //
+      "online",
+      //
+      () => set_online(true),
+      //
+      { passive: true },
+    );
+
+    makeEventListener(
+      //
+      window,
+      //
+      "offline",
+      //
+      () => set_online(false),
+      //
+      { passive: true },
+    );
+
+    const fetcher =
+      //
+      createMemo(() =>
+        online()
+          //
+          ? fetcher_create_online()
+          //
+          : fetcher_create_offline()
+      );
+
+    const fetch_page =
       //
       (
-        number:
-          //
-          number,
+        page: number,
       ) =>
-        actions.audio.get_page.orThrow(
-          number,
-        ).then(page =>
-          page.map(
-            convert_audio,
-          )
-        );
+        fetcher()
+          //
+          .fetch_page(page)
+          //
+          .then(page =>
+            page.map(audio =>
+              createSignal(
+                //
+                player_audio_create(
+                  //
+                  audio,
+                ),
+              )
+            )
+          );
 
     const [
       pages,
@@ -1503,130 +1815,151 @@ const List: Component =
         setPages,
       },
     ] = createInfiniteScroll(
-      fetch_page_with_signal,
+      fetch_page,
     );
 
-    onMount(() => {
-      const handle_swap = async () =>
-        //
+    // Swap occurs when the upload form is submitted.
+    const handle_swap =
+      //
+      async () =>
         setPages(
-          await fetch_page_with_signal(
-            0,
-          ),
+          //
+          await fetch_page(0),
         );
 
-      makeEventListener(
-        //
-        document,
-        //
-        "astro:after-swap",
-        //
-        handle_swap,
-        //
-        {
-          passive: true,
-        },
-      );
-    });
-
-    const timers =
+    makeEventListener(
       //
-      new Map();
-
-    onCleanup(() =>
-      timers.forEach(
-        clearInterval,
-      )
+      document,
+      //
+      "astro:after-swap",
+      //
+      handle_swap,
+      //
+      { passive: true },
     );
 
-    createEffect(() =>
-      pages()
-        //
-        .filter(
-          (
-            [
-              get,
-            ],
-          ) => {
-            const {
-              id,
+    createEffect(() => {
+      if (
+        online()
+      ) {
+        const timers =
+          //
+          new Map();
 
-              processing,
-            }: player_audio =
-              //
-              get();
+        onCleanup(() =>
+          timers.forEach(
+            clearInterval,
+          )
+        );
 
-            return processing === 1 && timers.has(id) === false;
-          },
-        )
-        //
-        .forEach(
-          (
-            [
-              get,
+        createEffect(() => {
+          pages()
+            //
+            .filter(
+              (
+                [
+                  current,
+                ],
+              ) => {
+                const {
+                  id,
 
-              update,
-            ],
-          ) => {
-            const {
-              id,
-            } = get();
+                  processing,
+                }: player_audio = current();
 
-            const poll =
-              //
-              async () => {
-                const fresh =
+                return (
                   //
-                  await actions.audio.get_one.orThrow(id);
+                  processing === 1
+                  //
+                  && timers.has(id) === false
+                );
+              },
+            )
+            //
+            .forEach(
+              (
+                [
+                  current,
 
-                if (
-                  fresh === null || fresh.processing === 0
-                ) {
-                  clearInterval(
+                  update,
+                ],
+              ) => {
+                const {
+                  id,
+                }: player_audio = current();
+
+                const poll =
+                  //
+                  async () => {
+                    const fresh: read_audio | null =
+                      //
+                      await fetcher()
+                        //
+                        .fetch_one(
+                          id,
+                        );
+
+                    if (
+                      fresh === null
+                      //
+                      || fresh.processing === 0
+                    ) {
+                      clearInterval(
+                        timer,
+                      );
+
+                      timers
+                        //
+                        .delete(
+                          id,
+                        );
+                    }
+
+                    const {
+                      processing,
+
+                      processing_state,
+                    }: player_audio = current();
+
+                    if (
+                      fresh !== null
+                      //
+                      && (
+                        fresh.processing !== processing
+                        //
+                        || fresh.processing_state !== processing_state
+                      )
+                    ) {
+                      update(
+                        player_audio_create(
+                          fresh,
+                        ),
+                      );
+                    }
+                  };
+
+                const timer =
+                  //
+                  setInterval(
+                    //
+                    poll,
+                    //
+                    1000,
+                  );
+
+                timers
+                  //
+                  .set(
+                    //
+                    id,
+                    //
                     timer,
                   );
-
-                  timers.delete(
-                    id,
-                  );
-                }
-
-                const {
-                  processing,
-
-                  processing_state,
-                } = get();
-
-                if (
-                  fresh
-                  && (fresh.processing !== processing || fresh.processing !== processing_state)
-                ) {
-                  update(
-                    player_audio_create(
-                      fresh,
-                    ),
-                  );
-                }
-              };
-
-            const timer =
-              //
-              setInterval(
-                //
-                poll,
-                //
-                1000,
-              );
-
-            timers.set(
-              //
-              id,
-              //
-              timer,
+              },
             );
-          },
-        )
-    );
+        });
+      }
+    });
 
     const menu =
       //
@@ -1638,6 +1971,8 @@ const List: Component =
 
     return (
       <>
+        <Switch checked={online()} />
+
         <ol class={`grid gap-1 ${player.idle() ? "" : "pb-14"}`.trim()}>
           <For each={pages()}>
             {(
@@ -1676,13 +2011,19 @@ const List: Component =
           </Show>
         </ol>
 
-        {menu
+        {
           //
-          .render()}
+          menu
+            //
+            .render()
+        }
 
-        {player
+        {
           //
-          .render()}
+          player
+            //
+            .render()
+        }
       </>
     );
   };

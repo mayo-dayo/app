@@ -1,27 +1,27 @@
 import {
-  defineMiddleware,
-  sequence,
-} from "astro:middleware";
-
-import {
   z,
 } from "astro:schema";
 
 import {
-  context_get_or_init,
-} from "@/context";
-
-import {
-  sign,
-} from "@/crypto";
-
-import {
-  incoming_id,
-} from "@/schema";
+  defineMiddleware,
+  sequence,
+} from "astro:middleware";
 
 import type {
   database_user,
-} from "@/database";
+} from "@/mayo/common/database_user";
+
+import {
+  context_get_or_init,
+} from "@/mayo/server/context";
+
+import {
+  sign,
+} from "@/mayo/server/crypto";
+
+import {
+  incoming_id,
+} from "@/mayo/server/incoming";
 
 const context =
   //
@@ -46,28 +46,37 @@ const authentication =
     //
     next,
   ) => {
+    // 
+    //
+    // dprint-ignore
     const needs_authentication =
-      // dprint-ignore
-      request.url.pathname === "/" 
+      //
+      //
+      //
 
-      ||  request.url.pathname === "/endpoints/audio"
+          request.url.pathname === "/" 
+
+      ||  request.url.pathname === "/endpoints/audio_stream"
+
+      /*
+       *
+       * `navigator.mediaSession` doesn't send cookies when fetching `artwork`?
+       *
+       * ||  request.url.pathname === "/endpoints/audio_thumbnail"
+       *
+       */
 
       ||  request.url.pathname.startsWith("/_actions");
 
-    if (
-      !needs_authentication
-    ) {
-      return next();
-    }
-
-    const cookie =
       //
-      request.cookies.get("token");
+      //
+      //
+    // 
+    // 
+    //
 
-    if (
-      !cookie
-    ) {
-      return request.redirect("/sign-up");
+    if (needs_authentication === false) {
+      return next();
     }
 
     const schema =
@@ -85,9 +94,15 @@ const authentication =
     let payload;
 
     try {
-      payload = schema.parse(
-        cookie.json(),
-      );
+      payload =
+        //
+        schema.parse(
+          request.cookies
+            //
+            ?.get("token")
+            //
+            ?.json(),
+        );
     } catch (e) {
       return request.redirect("/sign-up");
     }
@@ -105,12 +120,14 @@ const authentication =
     } = request.locals.context;
 
     if (
-      signature !== sign(
+      signature
         //
-        secret,
-        //
-        user_id,
-      )
+        !== sign(
+          //
+          secret,
+          //
+          user_id,
+        )
     ) {
       return request.redirect("/sign-up");
     }
@@ -144,7 +161,9 @@ const authentication =
     request.locals.user =
       //
       {
-        id: user_id,
+        id:
+          //
+          user_id,
 
         ...user,
       };

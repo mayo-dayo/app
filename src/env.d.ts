@@ -12,15 +12,19 @@ declare module App {
   interface Locals {
     context:
       //
-      import("@/context").context;
+      import("@/mayo/server/context").context;
 
     user?:
       //
       Pick<
         //
-        import("@/database").database_user,
+        import("@/mayo/common/database_user").database_user,
         //
-        "id" | "name" | "perms"
+        | "id"
+        //
+        | "name"
+        //
+        | "perms"
       >;
   }
 }

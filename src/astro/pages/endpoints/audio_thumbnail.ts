@@ -1,24 +1,23 @@
-import type {
-  APIRoute,
-} from "astro";
-
 import {
   z,
 } from "astro:schema";
 
-import path from "node:path";
+import {
+  type APIRoute,
+} from "astro";
 
 import {
   incoming_id,
-} from "@/schema";
-
-import type {
-  database_audio,
-} from "@/database";
+} from "@/mayo/server/incoming";
 
 import {
+  database_audio_get_thumbnail_file_path,
+} from "@/mayo/server/database_audio";
+
+import {
+  type database_audio,
   database_audio_thumbnail_sizes,
-} from "@/database";
+} from "@/mayo/common/database_audio";
 
 export const GET: APIRoute =
   //
@@ -50,7 +49,9 @@ export const GET: APIRoute =
             //
             Object.fromEntries(
               //
-              new URL(url).searchParams.entries(),
+              new URL(
+                url,
+              ).searchParams.entries(),
             ),
           );
     } catch (e) {
@@ -102,17 +103,13 @@ export const GET: APIRoute =
       Bun
         //
         .file(
-          //
-          path.join(
+          database_audio_get_thumbnail_file_path(
             //
-            path.join(
-              //
-              process.env.MAYO_DATA_PATH,
-              //
-              params.id,
-            ),
+            {
+              id: params.id,
+            },
             //
-            `thumbnail-${params.size}.webp`,
+            params.size,
           ),
         )
         //
