@@ -4,9 +4,9 @@ import {
 
 import bun from "@nurodev/astro-bun";
 
-import solidJs from "@astrojs/solid-js";
+import tailwindcss from "@tailwindcss/vite";
 
-import tailwind from "@astrojs/tailwind";
+import solidJs from "@astrojs/solid-js";
 
 export default defineConfig({
   srcDir: "src/astro",
@@ -15,5 +15,14 @@ export default defineConfig({
 
   adapter: bun(),
 
-  integrations: [solidJs(), tailwind()],
+  integrations: [
+    solidJs(),
+  ],
+
+  vite: {
+    plugins: [
+      // @ts-ignore
+      tailwindcss(),
+    ],
+  },
 });
