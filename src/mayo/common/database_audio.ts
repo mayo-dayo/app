@@ -76,6 +76,18 @@ export const database_audio_thumbnail_sizes =
     "64",
   ] as const;
 
+export const database_audio_is_playable =
+  //
+  (
+    {
+      processing,
+
+      processing_state,
+    }:
+      //
+      database_audio,
+  ): boolean => (processing === 0 && processing_state !== 1);
+
 export const database_audio_get_stream_endpoint_path =
   //
   (
@@ -84,12 +96,7 @@ export const database_audio_get_stream_endpoint_path =
       id,
     }:
       //
-      Pick<
-        //
-        database_audio,
-        //
-        "id"
-      >,
+      database_audio,
   ): string => `/endpoints/audio_stream?id=${id}`;
 
 export const database_audio_get_thumbnail_endpoint_path =
@@ -100,12 +107,7 @@ export const database_audio_get_thumbnail_endpoint_path =
       id,
     }:
       //
-      Pick<
-        //
-        database_audio,
-        //
-        "id"
-      >,
+      database_audio,
     //
     size:
       //

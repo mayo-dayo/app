@@ -2,22 +2,6 @@ import {
   actions,
 } from "astro:actions";
 
-import type {
-  Accessor,
-  Component,
-  JSX,
-} from "solid-js";
-
-import {
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-  Show,
-} from "solid-js";
-
 import {
   makeAudio,
 } from "@solid-primitives/audio";
@@ -35,7 +19,30 @@ import {
   createInfiniteScroll,
 } from "@solid-primitives/pagination";
 
-import Hammer from "hammerjs";
+import type {
+  Accessor,
+  Component,
+  JSX,
+} from "solid-js";
+
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  Match,
+  onCleanup,
+  Show,
+  Switch,
+} from "solid-js";
+
+import FadeIn from "@/mayo/client/FadeIn";
+
+import {
+  offline_audio_get,
+  offline_audio_get_download_state,
+} from "@/mayo/client/offline_audio";
 
 import type {
   database_audio,
@@ -44,30 +51,17 @@ import type {
 import {
   database_audio_get_stream_endpoint_path,
   database_audio_get_thumbnail_endpoint_path,
-  database_audio_page_size,
+  database_audio_is_playable,
   database_audio_thumbnail_sizes,
 } from "@/mayo/common/database_audio";
 
-import FadeIn from "@/mayo/client/FadeIn";
-
-import Switch from "@/mayo/client/Switch";
-
 type player_audio =
   //
-  & Pick<
-    //
-    database_audio,
-    //
-    | "id"
-    //
-    | "has_thumbnail"
-    //
-    | "processing"
-    //
-    | "processing_state"
-  >
-  //
-  & {
+  {
+    database_audio:
+      //
+      database_audio;
+
     duration?:
       //
       string;
@@ -88,424 +82,202 @@ type player_audio =
 const player_audio_create =
   //
   (
-    {
-      id,
-
-      has_thumbnail,
-
-      file_name,
-
-      tags,
-
-      duration,
-
-      processing,
-
-      processing_state,
-    }:
+    database_audio:
       //
       database_audio,
   ): player_audio => {
-    const parse_tags =
-      //
-      (): Pick<
+    let artist;
+
+    let album;
+
+    let title;
+
+    if (
+      database_audio.tags
+    ) {
+      const tags =
         //
-        player_audio,
+        new Map(
+          //
+          (JSON.parse(
+            database_audio.tags,
+          ) as string[][])
+            //
+            .map(([
+              k,
+
+              v,
+            ]) => [
+              k.toLowerCase(),
+
+              v,
+            ]),
+        );
+
+      artist =
         //
-        | "artist"
+        tags.get(
+          "artist",
+        );
+
+      album =
         //
-        | "album"
+        tags.get(
+          "album",
+        );
+
+      title =
         //
-        | "title"
-      > => {
-        let artist;
+        tags.get(
+          "title",
+        );
+    }
 
-        let album;
+    if (title === undefined) {
+      title =
+        //
+        database_audio.file_name;
+    }
 
-        let title;
+    let duration;
 
-        if (tags) {
-          const map =
+    if (
+      database_audio.duration
+    ) {
+      const h =
+        //
+        Math.floor(database_audio.duration / 3600);
+
+      const m =
+        //
+        Math.floor((database_audio.duration % 3600) / 60);
+
+      const s =
+        //
+        database_audio.duration % 60;
+
+      const pad =
+        //
+        (
+          number:
             //
-            new Map(
-              //
-              (JSON.parse(
-                tags,
-              ) as string[][])
-                //
-                .map(([
-                  k,
+            number,
+        ) => String(number).padStart(2, "0");
 
-                  v,
-                ]) => [
-                  k.toLowerCase(),
-
-                  v,
-                ]),
-            );
-
-          artist =
-            //
-            map.get(
-              "artist",
-            );
-
-          album =
-            //
-            map.get(
-              "album",
-            );
-
-          title =
-            //
-            map.get(
-              "title",
-            );
-        }
-
-        if (title === undefined) {
-          title =
-            //
-            file_name;
-        }
-
-        return {
-          artist,
-
-          album,
-
-          title,
-        };
-      };
-
-    const format_duration =
-      //
-      (): Pick<player_audio, "duration"> | undefined => {
-        if (duration === null) {
-          return;
-        }
-
-        const hours =
+      duration =
+        //
+        h > 0
           //
-          Math.floor(
-            duration / 3600,
-          );
-
-        const minutes =
+          ? `${pad(h)}:${pad(m)}:${pad(s)}`
           //
-          Math.floor(
-            (duration % 3600) / 60,
-          );
-
-        const seconds =
-          //
-          duration % 60;
-
-        const pad =
-          //
-          (
-            num:
-              //
-              number,
-          ) =>
-            String(num)
-              //
-              .padStart(
-                //
-                2,
-                //
-                "0",
-              );
-
-        return {
-          duration: (
-            hours > 0
-              //
-              ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
-              //
-              : `${pad(minutes)}:${pad(seconds)}`
-          ),
-        };
-      };
+          : `${pad(m)}:${pad(s)}`;
+    }
 
     return {
-      id,
+      database_audio,
 
-      has_thumbnail,
+      artist,
 
-      processing,
+      album,
 
-      processing_state,
+      title,
 
-      ...parse_tags(),
-
-      ...format_duration(),
+      duration,
     };
   };
 
-export const player_audio_render_thumbnail =
+const player_audio_render =
   //
   (
-    audio:
+    //
+    player_audio:
       //
-      Pick<
-        //
-        player_audio,
-        //
-        | "id"
-        //
-        | "has_thumbnail"
-      >,
-  ): JSX.Element => (
-    audio.has_thumbnail
-      ? (
-        <img
-          //
-          class="w-8 h-8 flex-none rounded"
-          //
-          src={
-            //
-            database_audio_get_thumbnail_endpoint_path(
-              //
-              audio,
-              //
-              "64",
-            )
-          }
-          //
-          alt=""
-          //
-          decoding="async"
-        />
-      )
-      : (
-        <svg
-          //
-          class="w-8 h-8 flex-none fill-zinc-300"
-          //
-          viewBox="0 0 24 24"
-        >
-          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8zm2 11h-3v3.75c0 1.24-1.01 2.25-2.25 2.25S8.5 17.99 8.5 16.75s1.01-2.25 2.25-2.25c.46 0 .89.14 1.25.38V11h4zm-3-4V3.5L18.5 9z">
-          </path>
-        </svg>
-      )
-  );
+      player_audio,
+  ): JSX.Element => {
+    const {
+      database_audio,
 
-const player_audio_render: Component<
-  {
-    self:
-      //
-      Accessor<
-        player_audio
-      >;
-  }
-> =
-  //
-  ({
-    self,
-  }) => {
-    const playable =
-      //
-      () => {
-        const {
-          processing,
+      title,
 
-          processing_state,
-        } = self();
+      artist,
+    } = player_audio;
 
-        return processing === 0 && processing_state !== 1;
-      };
+    const {
+      processing,
 
-    const menu =
-      //
-      use_definite_menu();
+      processing_state,
+    } = database_audio;
 
-    const player =
-      //
-      use_definite_player();
+    return (
+      <div class="flex gap-3">
+        <div class="w-9 h-9 flex-none">
+          <Switch>
+            <Match
+              when={
+                //
+                database_audio.has_thumbnail === 1
+              }
+            >
+              <img
+                //
+                class="w-full h-full rounded"
+                //
+                src={
+                  //
+                  database_audio_get_thumbnail_endpoint_path(
+                    //
+                    database_audio,
+                    //
+                    "64",
+                  )
+                }
+                //
+                alt=""
+                //
+                decoding="async"
+              />
+            </Match>
 
-    const open_menu =
-      //
-      (
-        position:
-          //
-          position,
-      ) =>
-        menu.set_open(
-          {
-            audio:
-              //
-              self,
+            <Match
+              when={
+                //
+                database_audio.has_thumbnail === 0
+              }
+            >
+              <svg
+                //
+                class="w-full h-full fill-zinc-300"
+                //
+                viewBox="0 -960 960 960"
+              >
+                <path d="M430-200q38 0 64-26t26-64v-150h120v-80H480v155q-11-8-23.5-11.5T430-380q-38 0-64 26t-26 64q0 38 26 64t64 26ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" />
+              </svg>
+            </Match>
+          </Switch>
+        </div>
 
-            position,
-          },
-        );
+        <div class="my-auto">
+          <div class="line-clamp-1 break-all">
+            {title}
+          </div>
 
-    const handle_context_menu =
-      //
-      (
-        e:
-          //
-          MouseEvent,
-      ) => {
-        if (playable() === false) {
-          return;
-        }
-
-        e.preventDefault();
-
-        open_menu({
-          x:
-            //
-            e.clientX,
-
-          y:
-            //
-            e.clientY,
-        });
-      };
-
-    const handle_press =
-      //
-      (
-        e:
-          //
-          HammerInput,
-      ) => {
-        if (playable() === false) {
-          return;
-        }
-
-        if (
-          e.pointerType !== "mouse"
-        ) {
-          open_menu({
-            x:
-              //
-              e.center.x,
-
-            y:
-              //
-              e.center.y,
-          });
-        }
-      };
-
-    const handle_tap =
-      //
-      () => {
-        if (playable() === false) {
-          return;
-        }
-
-        player.play(
-          self(),
-        );
-      };
-
-    const handle_ref =
-      //
-      (
-        ref:
-          //
-          HTMLDivElement,
-      ) => {
-        const hammer =
-          //
-          new Hammer(
-            ref,
-          );
-
-        onCleanup(() =>
-          //
-          hammer.destroy()
-        );
-
-        hammer.on(
-          //
-          "press",
-          //
-          handle_press,
-        );
-
-        hammer.on(
-          //
-          "tap",
-          //
-          handle_tap,
-        );
-      };
-
-    const inner =
-      //
-      () => {
-        const {
-          id,
-
-          has_thumbnail,
-
-          title,
-
-          processing,
-
-          processing_state,
-
-          artist,
-
-          duration,
-        } = self();
-
-        return (
-          <div
-            // dprint-ignore
-            class={`flex gap-3 select-none p-3 ${playable() ? "cursor-pointer rounded transition hover:bg-zinc-900 active:bg-zinc-800" : "opacity-60"}`}
-            //
-            ref={handle_ref}
-            //
-            oncontextmenu={handle_context_menu}
-          >
+          <div class="line-clamp-1 break-all text-zinc-400">
             {
               //
-              player_audio_render_thumbnail(
-                {
-                  id,
-
-                  has_thumbnail,
-                },
-              )
-            }
-
-            <div class="mr-auto">
-              <h1 class="line-clamp-1 break-all">
-                {title}
-              </h1>
-
-              <div class="line-clamp-1 break-all text-zinc-400">
-                {
+              processing === 0
+                //
+                ? processing_state === 1
                   //
-                  processing === 0
-                    //
-                    ? processing_state === 1
-                      //
-                      ? <>Unable to process this file.</>
-                      //
-                      : artist
-                    //
-                    : artist ?? <>Processing...</>
-                }
-              </div>
-            </div>
-
-            {duration && (
-              <div class="w-8 h-8 flex-none content-center text-zinc-400">
-                {duration}
-              </div>
-            )}
+                  ? <>Unable to process this file.</>
+                  //
+                  : artist
+                //
+                : artist ?? <>Processing...</>
+            }
           </div>
-        );
-      };
-
-    return inner();
+        </div>
+      </div>
+    );
   };
 
 const [
@@ -695,9 +467,7 @@ const [
             }
 
             const {
-              id,
-
-              has_thumbnail,
+              database_audio,
 
               title,
 
@@ -760,9 +530,9 @@ const [
               //
               makeAudio(
                 //
-                database_audio_get_stream_endpoint_path({
-                  id,
-                }),
+                database_audio_get_stream_endpoint_path(
+                  database_audio,
+                ),
                 //
                 {
                   ended:
@@ -850,22 +620,28 @@ const [
 
               const artwork =
                 //
-                has_thumbnail
+                database_audio.has_thumbnail
                   //
                   ? database_audio_thumbnail_sizes
                     //
                     .map(size => {
-                      return {
-                        src:
+                      const src =
+                        //
+                        database_audio_get_thumbnail_endpoint_path(
                           //
-                          database_audio_get_thumbnail_endpoint_path(
-                            //
-                            { id },
-                            //
-                            size,
-                          ),
+                          database_audio,
+                          //
+                          size,
+                        );
 
-                        sizes: `${size}x${size}`,
+                      const sizes =
+                        //
+                        `${size}x${size}`;
+
+                      return {
+                        src,
+
+                        sizes,
                       };
                     })
                   //
@@ -940,15 +716,7 @@ const [
         }
 
         const {
-          player_audio: {
-            id,
-
-            has_thumbnail,
-
-            title,
-
-            artist,
-          },
+          player_audio,
 
           progress,
 
@@ -961,40 +729,18 @@ const [
           <div class="fixed relaitve w-full left-0 bottom-0 select-none bg-zinc-950">
             <div
               //
-              class="absolute bg-zinc-800"
+              class="absolute h-px bg-zinc-800"
               //
               style={{
                 width: `${progress()}%`,
-
-                height: "1px",
               }}
-            >
-            </div>
+            />
 
             <div class="px-4 py-3 border-t border-zinc-900">
               <div class="px-3 max-w-md mx-auto flex gap-4">
-                {
-                  //
-                  player_audio_render_thumbnail(
-                    //
-                    {
-                      //
-                      id,
-                      //
-                      has_thumbnail,
-                    },
-                  )
-                }
-
-                <div>
-                  <h1 class="line-clamp-1 break-all">
-                    {title}
-                  </h1>
-
-                  <div class="line-clamp-1 break-all text-zinc-400">
-                    {artist}
-                  </div>
-                </div>
+                {player_audio_render(
+                  player_audio,
+                )}
 
                 <menu class="ml-auto my-auto flex gap-2">
                   <li>
@@ -1114,7 +860,7 @@ const [
           );
       };
 
-    const enqueue =
+    const play_later =
       //
       (
         audio:
@@ -1158,21 +904,13 @@ const [
 
       play_next,
 
-      enqueue,
+      play_later,
     };
   });
 
 const use_definite_player =
   //
   () => use_player()!;
-
-type position =
-  //
-  {
-    x: number;
-
-    y: number;
-  };
 
 const [
   MenuProvider,
@@ -1188,268 +926,311 @@ const [
     ] =
       //
       createSignal<
-        {
-          audio:
-            //
-            Accessor<
-              player_audio
-            >;
-
-          position:
-            //
-            position;
-        } | undefined
+        Accessor<player_audio> | undefined
       >();
 
     const render =
       //
       () => {
-        const tmp =
-          //
-          open();
+        let ref: HTMLDialogElement | undefined;
 
-        if (tmp === undefined) {
-          return;
-        }
-
-        const {
-          audio,
-
-          position: {
-            x,
-
-            y,
-          },
-        } = tmp;
-
-        const [
-          position,
-
-          set_position,
-        ] = createSignal(
-          {
-            left:
-              //
-              "0px",
-            top:
-              //
-              "0px",
-          },
+        createEffect(() =>
+          open() === undefined
+            //
+            ? ref?.close()
+            //
+            : ref?.showModal()
         );
 
-        let ref: HTMLMenuElement | undefined;
-
-        onMount(() => {
-          if (ref) {
-            const padding_x =
-              //
-              32;
-
-            const padding_y =
-              //
-              player.idle()
-                //
-                ? 16
-                //
-                : 72;
-
-            const menu_w =
-              //
-              ref.clientWidth;
-
-            const menu_h =
-              //
-              ref.clientHeight;
-
-            const normalized_x =
-              //
-              Math.min(
-                //
-                x + 6,
-                //
-                window.innerWidth - padding_x - menu_w,
-              );
-
-            const normalized_y =
-              //
-              Math.min(
-                //
-                y + 6,
-                //
-                window.innerHeight - padding_y - menu_h,
-              );
-
-            const left =
-              //
-              `${normalized_x}px`;
-
-            const top =
-              //
-              `${normalized_y}px`;
-
-            set_position({
-              left,
-
-              top,
-            });
-          }
-        });
-
-        const handle_click =
+        const content =
           //
-          (
-            e:
+          createMemo(() => {
+            const player_audio =
               //
-              MouseEvent,
-          ) => {
-            if (ref) {
-              const rect =
-                //
-                ref.getBoundingClientRect();
+              open();
 
-              const distance_y =
-                //
-                Math.max(
-                  //
-                  rect.top - e.clientY,
-                  //
-                  e.clientY - (rect.top + rect.height),
-                  //
-                  0,
+            if (player_audio === undefined) {
+              return;
+            }
+
+            const [
+              offline_audio_download_state,
+            ] =
+              //
+              createResource(() => {
+                const {
+                  database_audio,
+                } = player_audio();
+
+                return (
+                  offline_audio_get(
+                    database_audio,
+                  )
+                    //
+                    .then(offline_audio =>
+                      offline_audio
+                        //
+                        ? offline_audio_get_download_state(offline_audio)
+                        //
+                        : null
+                    )
                 );
+              });
 
-              const distance_x =
-                //
-                Math.max(
-                  //
-                  rect.left - e.clientX,
-                  //
-                  e.clientX - (rect.left + rect.width),
-                  //
-                  0,
-                );
+            const player =
+              //
+              use_definite_player();
 
-              const distance =
-                //
-                Math.sqrt(
-                  distance_x * distance_x + distance_y * distance_y,
-                );
-
-              if (distance > 12) {
+            const handle_play_now =
+              //
+              () => {
                 set_open(
                   undefined,
                 );
-              }
-            }
-          };
 
-        makeEventListener(
-          //
-          document,
-          //
-          "click",
-          //
-          handle_click,
-          //
-          {
-            passive:
+                player.play(
+                  player_audio(),
+                );
+              };
+
+            const handle_play_next =
               //
-              true,
-          },
-        );
+              () => {
+                set_open(
+                  undefined,
+                );
 
-        const player =
-          //
-          use_definite_player();
+                player.play_next(
+                  player_audio(),
+                );
+              };
 
-        const handle_play_next =
-          //
-          () => {
-            player
+            const handle_play_later =
               //
-              .play_next(
-                audio(),
-              );
+              () => {
+                set_open(
+                  undefined,
+                );
 
-            set_open(
-              undefined,
+                player.play_later(
+                  player_audio(),
+                );
+              };
+
+            const handle_download =
+              //
+              () => {
+                set_open(
+                  undefined,
+                );
+              };
+
+            const handle_cancel =
+              //
+              () => {
+                set_open(
+                  undefined,
+                );
+              };
+
+            const handle_delete =
+              //
+              () => {
+                set_open(
+                  undefined,
+                );
+              };
+
+            const handle_retry =
+              //
+              () => {
+                set_open(
+                  undefined,
+                );
+              };
+
+            return (
+              <div class="space-y-1">
+                <div class="rounded bg-zinc-950">
+                  <div class="p-3">
+                    {player_audio_render(player_audio())}
+                  </div>
+
+                  <menu class="grid grid-cols-3 border-t border-zinc-900 divide-x divide-zinc-900">
+                    <li>
+                      <button
+                        //
+                        class="flex justify-center items-center gap-1 w-full p-3 outline-none select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded-bl"
+                        //
+                        onClick={handle_play_now}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 fill-zinc-300"
+                          //
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="M120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Zm520 520v-320l240 160-240 160Z" />
+                        </svg>
+
+                        Play
+                      </button>
+                    </li>
+
+                    <li>
+                      <button
+                        //
+                        class="flex justify-center items-center gap-1 w-full p-3 outline-none select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800"
+                        //
+                        onClick={handle_play_next}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 fill-zinc-300"
+                          //
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="M120-320v-80h280v80H120Zm0-160v-80h440v80H120Zm0-160v-80h440v80H120Zm520 480v-160H480v-80h160v-160h80v160h160v80H720v160h-80Z" />
+                        </svg>
+
+                        Next
+                      </button>
+                    </li>
+
+                    <li>
+                      <button
+                        //
+                        class="flex justify-center items-center gap-1 w-full p-3 outline-none select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded-br"
+                        //
+                        onClick={handle_play_later}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 fill-zinc-300"
+                          //
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="M640-160q-50 0-85-35t-35-85q0-50 35-85t85-35q11 0 21 1.5t19 6.5v-328h200v80H760v360q0 50-35 85t-85 35ZM120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Z" />
+                        </svg>
+
+                        Later
+                      </button>
+                    </li>
+                  </menu>
+                </div>
+
+                <div class="rounded bg-zinc-950 h-10">
+                  <Switch>
+                    <Match when={offline_audio_download_state() === null}>
+                      <button
+                        //
+                        class="flex justify-center items-center gap-1 w-full p-3 select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded"
+                        //
+                        onClick={handle_download}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 fill-zinc-300"
+                          //
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />
+                        </svg>
+
+                        Download
+                      </button>
+                    </Match>
+
+                    <Match when={offline_audio_download_state() === "pending"}>
+                      <button
+                        //
+                        class="flex justify-center items-center gap-1 w-full p-3 select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded"
+                        //
+                        onClick={handle_cancel}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 fill-zinc-300"
+                          //
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
+                        </svg>
+
+                        Cancel
+                      </button>
+                    </Match>
+
+                    <Match when={offline_audio_download_state() === "finished"}>
+                      <button
+                        //
+                        class="flex justify-center items-center gap-1 w-full p-3 select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded"
+                        //
+                        onClick={handle_delete}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 fill-zinc-300"
+                          //
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="M791-55 686-160H240q-33 0-56.5-23.5T160-240v-120h80v120h366L503-343l-23 23-200-200 23-23L55-791l57-57 736 736-57 57ZM617-457l-57-57 64-64 56 58-63 63Zm-97-97-80-80v-166h80v246Zm280 280-80-80v-6h80v86Z" />
+                        </svg>
+
+                        Delete
+                      </button>
+                    </Match>
+
+                    <Match when={offline_audio_download_state() === "error"}>
+                      <button
+                        //
+                        class="flex justify-center items-center gap-1 w-full p-3 select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded"
+                        //
+                        onClick={handle_retry}
+                      >
+                        <svg
+                          //
+                          class="w-4 h-4 fill-zinc-300"
+                          //
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="M160-160v-80h110l-16-14q-52-46-73-105t-21-119q0-111 66.5-197.5T400-790v84q-72 26-116 88.5T240-478q0 45 17 87.5t53 78.5l10 10v-98h80v240H160Zm400-10v-84q72-26 116-88.5T720-482q0-45-17-87.5T650-648l-10-10v98h-80v-240h240v80H690l16 14q49 49 71.5 106.5T800-482q0 111-66.5 197.5T560-170Z" />
+                        </svg>
+
+                        Retry
+                      </button>
+                    </Match>
+                  </Switch>
+                </div>
+              </div>
             );
-          };
-
-        const handle_enqueue =
-          //
-          () => {
-            player
-              //
-              .enqueue(
-                audio(),
-              );
-
-            set_open(
-              undefined,
-            );
-          };
+          });
 
         return (
-          <menu
+          <dialog
             //
-            class="fixed bg-zinc-950 border-zinc-900 divide-y divide-zinc-900 rounded"
-            //
-            style={position()}
+            class="m-auto w-2xs max-h-none text-inherit bg-transparent"
             //
             ref={ref}
+            //
+            onClick={() => set_open(undefined)}
           >
-            <li>
-              <button
-                //
-                class="w-full flex gap-2 py-3 pl-3 pr-4 items-center outline-none rounded-t select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800"
-                //
-                onClick={handle_play_next}
-              >
-                <svg
-                  //
-                  class="w-5 h-5 fill-zinc-300"
-                  //
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M3 10h11v2H3zm0-4h11v2H3zm0 8h7v2H3zm13-1v8l6-4z">
-                  </path>
-                </svg>
-
-                Play next
-              </button>
-            </li>
-
-            <li>
-              <button
-                //
-                class="w-full flex gap-2 py-3 pl-3 pr-4 items-center outline-none rounded-b select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800"
-                //
-                onClick={handle_enqueue}
-              >
-                <svg
-                  //
-                  class="w-5 h-5 fill-zinc-300"
-                  //
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M15 6H3v2h12zm0 4H3v2h12zM3 16h8v-2H3zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6z">
-                  </path>
-                </svg>
-
-                Enqueue
-              </button>
-            </li>
-          </menu>
+            <div
+              //
+              onClick={(e) => e.stopPropagation()}
+            >
+              {content()}
+            </div>
+          </dialog>
         );
       };
 
     return {
       open,
 
-      render,
-
       set_open,
+
+      render,
     };
   });
 
@@ -1457,96 +1238,11 @@ const use_definite_menu =
   //
   () => use_menu()!;
 
-const [
-  IdbProvider,
-
-  use_idb,
-] =
-  //
-  createContextProvider((): Promise<
-    //
-    IDBDatabase
-  > => {
-    return new Promise((
-      //
-      resolve,
-      //
-      reject,
-    ) => {
-      const req =
-        //
-        indexedDB.open(
-          //
-          "player-offline-storage",
-          //
-          1,
-        );
-
-      req.onerror =
-        //
-        () =>
-          reject(
-            //
-            req.error,
-          );
-
-      req.onsuccess =
-        //
-        () =>
-          resolve(
-            //
-            req.result,
-          );
-
-      req.onupgradeneeded =
-        //
-        (e) => {
-          const idb =
-            //
-            req.result;
-
-          switch (e.oldVersion) {
-            case 0:
-              const audio_store =
-                //
-                idb.createObjectStore(
-                  //
-                  "audio",
-                  //
-                  {
-                    keyPath:
-                      //
-                      "id",
-                  },
-                );
-
-              audio_store.createIndex(
-                //
-                "time_uploaded",
-                //
-                "time_uploaded",
-              );
-
-              break;
-
-            default:
-              throw new Error("unexpected idb version");
-          }
-        };
-    });
-  });
-
-const use_definite_idb =
-  //
-  () => use_idb()!;
-
 const ProviderWrapper: Component =
   //
   () => (
     <MultiProvider
       values={[
-        IdbProvider,
-
         PlayerProvider,
 
         MenuProvider,
@@ -1606,137 +1302,6 @@ const fetcher_create_online =
     };
   };
 
-const fetcher_create_offline =
-  //
-  (): fetcher => {
-    return {
-      fetch_one:
-        //
-        (
-          id,
-        ) =>
-          use_definite_idb()
-            //
-            .then(idb =>
-              new Promise((
-                //
-                resolve,
-                //
-                reject,
-              ) => {
-                const req =
-                  //
-                  idb
-                    //
-                    .transaction("audio")
-                    //
-                    .objectStore("audio")
-                    //
-                    .get(id);
-
-                req.onerror =
-                  //
-                  () =>
-                    reject(
-                      //
-                      req.error,
-                    );
-
-                req.onsuccess =
-                  //
-                  () =>
-                    resolve(
-                      //
-                      req.result
-                        //
-                        ? req.result as database_audio
-                        //
-                        : null,
-                    );
-              })
-            ),
-
-      fetch_page:
-        //
-        (
-          //
-          page,
-        ) =>
-          use_definite_idb()
-            //
-            .then(idb =>
-              new Promise((
-                //
-                resolve,
-                //
-                reject,
-              ) => {
-                const req = idb
-                  //
-                  .transaction("audio")
-                  //
-                  .objectStore("audio")
-                  //
-                  .index("time_uploaded")
-                  //
-                  .openCursor(null, "prev");
-
-                req.onerror =
-                  //
-                  () =>
-                    reject(
-                      //
-                      req.error,
-                    );
-
-                req.onsuccess =
-                  //
-                  () => {
-                    const result =
-                      //
-                      [];
-
-                    const cursor =
-                      //
-                      req.result;
-
-                    if (cursor !== null) {
-                      try {
-                        cursor.advance(
-                          //
-                          database_audio_page_size * page,
-                        );
-
-                        while (
-                          //
-                          cursor.value
-                          //
-                          && result.length < database_audio_page_size
-                        ) {
-                          result.push(
-                            //
-                            cursor.value as database_audio,
-                          );
-
-                          cursor.continue();
-                        }
-                      } catch (e) {
-                        // Guard against `.advance` or `.continue` throwing
-                        // `InvalidStateError` ("thrown if the cursor is being iterated
-                        // or has iterated past its end").
-                      }
-                    }
-
-                    resolve(
-                      //
-                      result,
-                    );
-                  };
-              })
-            ),
-    };
-  };
-
 const List: Component =
   //
   () => {
@@ -1772,13 +1337,7 @@ const List: Component =
 
     const fetcher =
       //
-      createMemo(() =>
-        online()
-          //
-          ? fetcher_create_online()
-          //
-          : fetcher_create_offline()
-      );
+      createMemo(() => fetcher_create_online());
 
     const fetch_page =
       //
@@ -1859,9 +1418,11 @@ const List: Component =
                 ],
               ) => {
                 const {
-                  id,
+                  database_audio: {
+                    id,
 
-                  processing,
+                    processing,
+                  },
                 }: player_audio = current();
 
                 return (
@@ -1882,7 +1443,9 @@ const List: Component =
                 ],
               ) => {
                 const {
-                  id,
+                  database_audio: {
+                    id,
+                  },
                 }: player_audio = current();
 
                 const poll =
@@ -1913,9 +1476,11 @@ const List: Component =
                     }
 
                     const {
-                      processing,
+                      database_audio: {
+                        processing,
 
-                      processing_state,
+                        processing_state,
+                      },
                     }: player_audio = current();
 
                     if (
@@ -1968,36 +1533,66 @@ const List: Component =
 
     return (
       <>
-        <Switch checked={online()} />
-
         <ol class={`grid gap-1 ${player.idle() ? "" : "pb-14"}`.trim()}>
           <For each={pages()}>
             {(
               //
               [
-                audio,
+                player_audio,
               ],
               //
               index,
-            ) => (
-              <li>
-                <FadeIn
+            ) => {
+              const {
+                database_audio,
+              } = player_audio();
+
+              const is_playable =
+                //
+                database_audio_is_playable(
+                  database_audio,
+                );
+
+              const handle_click =
+                //
+                () => menu.set_open(() => player_audio);
+
+              return (
+                <li
                   //
-                  duration={750}
-                  //
-                  delay={index() * 25}
-                >
-                  {
+                  class={
                     //
-                    player_audio_render({
-                      self:
+                    `select-none ${
+                      is_playable
                         //
-                        audio,
-                    })
+                        ? "cursor-pointer rounded transition hover:bg-zinc-900 active:bg-zinc-800"
+                        //
+                        : "opacity-60"
+                    }`
                   }
-                </FadeIn>
-              </li>
-            )}
+                  //
+                  onClick={
+                    //
+                    is_playable
+                      //
+                      ? handle_click
+                      //
+                      : undefined
+                  }
+                >
+                  <FadeIn
+                    //
+                    duration={750}
+                    //
+                    delay={index() * 25}
+                  >
+                    <div class="flex p-3">
+                      {player_audio_render(player_audio())}
+                    </div>
+                  </FadeIn>
+                </li>
+              );
+            }}
           </For>
 
           <Show when={!end()}>

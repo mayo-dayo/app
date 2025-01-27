@@ -3,7 +3,7 @@ import {
   ClientRouter,
 } from "astro:transitions";
 
-import "@fontsource-variable/noto-sans-jp";
+import "@fontsource/noto-sans-jp";
 ---
 
 <html
@@ -15,7 +15,11 @@ import "@fontsource-variable/noto-sans-jp";
 >
   <head>
     <style is:global>
-      @import "tailwindcss";
+    @import "tailwindcss";
+
+    @theme {  
+      --font-display: 'Noto Sans JP', sans-serif;
+    }
     </style>
 
     <ClientRouter />
@@ -135,9 +139,7 @@ import "@fontsource-variable/noto-sans-jp";
 
   <body>
     <div
-      class="min-h-screen p-4 flex flex-col text-xs text-zinc-300 selection:bg-zinc-700"
-
-      style="font-family: 'Noto Sans JP Variable', sans-serif;"
+      class="min-h-screen p-4 flex flex-col text-xs text-zinc-300 font-display selection:bg-zinc-700"
 
       transition:animate="none"
     >
