@@ -4,8 +4,6 @@
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/solid-js": "5.0.2",
-    "@fontsource-variable/material-symbols-rounded": "^5.1.4",
-    "@fontsource-variable/noto-sans-jp": "^5.1.1",
     "@fontsource/noto-sans-jp": "^5.1.1",
     "@nurodev/astro-bun": "^2.0.5",
     "@solid-primitives/audio": "^1.4.0",
