@@ -362,13 +362,18 @@ export const player_audio_list_render =
                       e:
                         //
                         any,
-                    ) =>
+                    ) => {
+                      e.preventDefault();
+
+                      e.stopPropagation();
+
                       open_menu(
                         //
                         e.detail.clientX as number,
                         //
                         e.detail.clientY as number,
                       );
+                    };
 
                   makeEventListener(
                     //
@@ -377,8 +382,6 @@ export const player_audio_list_render =
                     "long-press",
                     //
                     handle_long_press,
-                    //
-                    { passive: true },
                   );
                 }
               });
@@ -403,6 +406,8 @@ export const player_audio_list_render =
                     MouseEvent,
                 ) => {
                   e.preventDefault();
+
+                  e.stopPropagation();
 
                   open_menu(
                     //

@@ -3,6 +3,7 @@ import type {
 } from "solid-js";
 
 import {
+  createEffect,
   createResource,
   createSignal,
 } from "solid-js";
@@ -61,47 +62,46 @@ const [
 
   let ref: HTMLDivElement | undefined;
 
-  const handle_click =
-    //
-    (
-      e:
-        //
-        MouseEvent,
-    ) => {
-      const current_context =
-        //
-        context();
+  createEffect(() => {
+    const current_context =
+      //
+      context();
 
-      if (
+    if (
+      current_context !== "undefined"
+    ) {
+      const handle_click =
         //
-        current_context === "undefined"
-      ) {
-        return;
-      }
+        (
+          e:
+            //
+            MouseEvent,
+        ) => {
+          if (
+            ref
+            //
+            && !ref.contains(
+              e.target as Node,
+            )
+          ) {
+            set_context(
+              "undefined",
+            );
+          }
+        };
 
-      if (
-        ref
+      makeEventListener(
         //
-        && !ref.contains(
-          e.target as Node,
-        )
-      ) {
-        set_context(
-          "undefined",
-        );
-      }
-    };
-
-  makeEventListener(
-    //
-    document,
-    //
-    "click",
-    //
-    handle_click,
-    //
-    { passive: true },
-  );
+        document,
+        //
+        "click",
+        //
+        handle_click,
+        //
+        { passive: true },
+      );
+    }
+  });
 
   const [
     position,
@@ -236,9 +236,11 @@ const [
           player_audio,
         } = current_context;
 
-        player_queue.play_now(
-          player_audio,
-        );
+        player_queue
+          //
+          .play_now(
+            player_audio,
+          );
 
         set_context(
           "undefined",
@@ -260,9 +262,11 @@ const [
           player_audio,
         } = current_context;
 
-        player_queue.play_next(
-          player_audio,
-        );
+        player_queue
+          //
+          .play_next(
+            player_audio,
+          );
 
         set_context(
           "undefined",
@@ -311,6 +315,8 @@ const [
         style={position()}
         //
         ref={ref}
+        //
+        onClick={(e) => e.stopPropagation()} // Prevent clicks inside the menu from closing it
       >
         <menu class="grid divide-y divide-zinc-900 rounded bg-zinc-950">
           <li>
