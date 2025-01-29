@@ -4,8 +4,10 @@ import type {
 
 import {
   createEffect,
+  createMemo,
   createResource,
   createSignal,
+  For,
 } from "solid-js";
 
 import {
@@ -28,6 +30,11 @@ import type {
 import {
   use_player_queue,
 } from "@/mayo/client/player_queue";
+
+import {
+  offline_audio_create,
+  offline_audio_get,
+} from "@/mayo/client/offline_audio";
 
 export type player_audio_menu_context =
   //
@@ -218,9 +225,37 @@ const [
         );
       },
     );
-  const player_queue =
+
+  const [
+    offline_audio,
+  ] = createResource(
     //
-    use_player_queue()!;
+    context,
+    //
+    (
+      current_context,
+    ) => {
+      if (
+        current_context
+          //
+          === "undefined"
+      ) {
+        return;
+      }
+
+      const {
+        player_audio: {
+          database_audio,
+        },
+      } = current_context;
+
+      return (
+        offline_audio_get(
+          database_audio,
+        )
+      );
+    },
+  );
 
   const handle_play_now =
     //
@@ -298,89 +333,176 @@ const [
       }
     };
 
+  const handle_download =
+    //
+    () => {
+      const current_context =
+        //
+        context();
+
+      if (
+        current_context !== "undefined"
+      ) {
+        const {
+          player_audio: {
+            database_audio,
+          },
+        } = current_context;
+
+        offline_audio_create(
+          database_audio,
+        );
+
+        set_context(
+          "undefined",
+        );
+      }
+    };
+
+  const items =
+    //
+    createMemo(() => {
+      const items =
+        //
+        [
+          {
+            handler:
+              //
+              handle_play_now,
+
+            icon:
+              //
+              <path d="M120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Zm520 520v-320l240 160-240 160Z" />,
+
+            label:
+              //
+              "Play now",
+          },
+
+          {
+            handler:
+              //
+              handle_play_next,
+
+            icon:
+              //
+              <path d="M640-160q-50 0-85-35t-35-85q0-50 35-85t85-35q11 0 21 1.5t19 6.5v-328h200v80H760v360q0 50-35 85t-85 35ZM120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Z" />,
+
+            label:
+              //
+              "Play next",
+          },
+
+          {
+            handler:
+              //
+              handle_play_later,
+
+            icon:
+              //
+              <path d="M120-320v-80h280v80H120Zm0-160v-80h440v80H120Zm0-160v-80h440v80H120Zm520 480v-160H480v-80h160v-160h80v160h160v80H720v160h-80Z" />,
+
+            label:
+              //
+              "Play later",
+          },
+        ];
+
+      if (
+        offline_audio() === null
+      ) {
+        items.push(
+          {
+            handler:
+              //
+              handle_download,
+
+            icon:
+              //
+              <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />,
+
+            label:
+              //
+              "Download",
+          },
+        );
+      }
+
+      return (
+        //
+        items
+      );
+    });
+
+  const ready =
+    //
+    createMemo(() =>
+      (
+        position()
+          //
+          !== undefined
+      )
+      //
+      && (
+        offline_audio()
+          //
+          !== undefined
+      )
+    );
+
+  const player_queue =
+    //
+    use_player_queue()!;
+
   const render =
     //
-    (): JSX.Element => (
-      <div
-        //
-        class={
+    (): JSX.Element => {
+      return (
+        <div
           //
-          position()
+          class={
             //
-            ? "absolute w-max"
-            //
-            : "absolute w-max hidden left-0 top-0"
-        }
-        //
-        style={position()}
-        //
-        ref={ref}
-        //
-        onClick={(e) => e.stopPropagation()}
-      >
-        <menu class="grid divide-y divide-zinc-900 rounded bg-zinc-950">
-          <li>
-            <button
+            ready()
               //
-              class="w-full p-3 flex justify-center items-center gap-1 outline-none select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded-t"
+              ? "absolute w-max"
               //
-              onClick={handle_play_now}
-            >
-              <svg
-                //
-                class="w-4 h-4 fill-zinc-300"
-                //
-                viewBox="0 -960 960 960"
-              >
-                <path d="M120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Zm520 520v-320l240 160-240 160Z" />
-              </svg>
+              : "absolute w-max hidden left-0 top-0"
+          }
+          //
+          style={position()}
+          //
+          ref={ref}
+          //
+          onClick={(e) => e.stopPropagation()}
+        >
+          <menu class="grid divide-y divide-zinc-900 rounded bg-zinc-950">
+            <For each={items()}>
+              {item => (
+                <li>
+                  <button
+                    //
+                    class="w-full p-3 flex items-center gap-1 outline-none select-none cursor-pointer first:rounded-t last:rounded-b transition hover:bg-zinc-900 active:bg-zinc-800"
+                    //
+                    onClick={item.handler}
+                  >
+                    <svg
+                      //
+                      class="w-4 h-4 fill-zinc-300"
+                      //
+                      viewBox="0 -960 960 960"
+                    >
+                      {item.icon}
+                    </svg>
 
-              Play now
-            </button>
-          </li>
-
-          <li>
-            <button
-              //
-              class="w-full p-3 flex justify-center items-center gap-1 outline-none select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800"
-              //
-              onClick={handle_play_next}
-            >
-              <svg
-                //
-                class="w-4 h-4 fill-zinc-300"
-                //
-                viewBox="0 -960 960 960"
-              >
-                <path d="M640-160q-50 0-85-35t-35-85q0-50 35-85t85-35q11 0 21 1.5t19 6.5v-328h200v80H760v360q0 50-35 85t-85 35ZM120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Z" />
-              </svg>
-
-              Play next
-            </button>
-          </li>
-
-          <li>
-            <button
-              //
-              class="w-full p-3 flex justify-center items-center gap-1 outline-none select-none cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800 rounded-b"
-              //
-              onClick={handle_play_later}
-            >
-              <svg
-                //
-                class="w-4 h-4 fill-zinc-300"
-                //
-                viewBox="0 -960 960 960"
-              >
-                <path d="M120-320v-80h280v80H120Zm0-160v-80h440v80H120Zm0-160v-80h440v80H120Zm520 480v-160H480v-80h160v-160h80v160h160v80H720v160h-80Z" />
-              </svg>
-
-              Play later
-            </button>
-          </li>
-        </menu>
-      </div>
-    );
+                    {item.label}
+                  </button>
+                </li>
+              )}
+            </For>
+          </menu>
+        </div>
+      );
+    };
 
   return {
     context,
