@@ -4,6 +4,7 @@
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/solid-js": "5.0.2",
+    "@floating-ui/dom": "^1.6.13",
     "@fontsource/noto-sans-jp": "^5.1.1",
     "@nurodev/astro-bun": "^2.0.5",
     "@solid-primitives/audio": "^1.4.0",
@@ -14,6 +15,7 @@
     "@types/bun": "^1.2.0",
     "@types/range-parser": "^1.2.7",
     "astro": "^5.1.9",
+    "long-press-event": "^2.5.0",
     "range-parser": "^1.2.1",
     "solid-js": "^1.9.4",
     "tailwindcss": "^4.0.0",
