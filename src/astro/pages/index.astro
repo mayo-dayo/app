@@ -1,111 +1,21 @@
 ---
-import {
-  actions,
-} from "astro:actions";
-
-import {
-  perms_can_upload,
-} from "@/mayo/common/perms";
-
 import Layout from "@/mayo/client/Layout.astro";
 
+import Navigation from "@/mayo/client/Navigation.astro";
+
 import Player from "@/mayo/client/Player";
-
-const user =
-  //
-  Astro.locals.user;
-
-if (user === undefined) {
-  throw new Error("Unauthorized");
-}
-
-let result;
-
-const can_upload =
-  //
-  (
-    user.perms & perms_can_upload
-  ) !== 0;
-
-if (can_upload) {
-  result =
-    //
-    Astro.getActionResult(actions.audio.create);
-
-  if (
-    result
-    //
-    && !result.error
-  ) {
-    return Astro.redirect("/");
-  }
-}
 ---
 
 <Layout>
-  <div class="w-full max-w-md mx-auto">
-    {
-      can_upload && (
-        <>
-          <form
-            class="h-14 pb-4 flex items-center gap-2 border-b border-zinc-900"
+  <Navigation />
 
-            method="POST"
+  <div transition:persist>
+    <noscript>
+      <div class="p-2 text-center text-zinc-500">
+        Playing audio requires JavaScript.
+      </div>
+    </noscript>
 
-            enctype="multipart/form-data"
-
-            action={actions.audio.create}
-          >
-            <input
-              class="grow cursor-pointer file:mr-2 file:bg-transparent file:border-none file:text-zinc-800"
-
-              name="data"
-
-              type="file"
-
-              accept="audio/*,video/*"
-
-              multiple
-
-              required
-            />
-
-            <button
-              class="w-8 h-8 flex rounded-full cursor-pointer bg-transparent transition hover:bg-zinc-900 active:bg-zinc-800"
-            >
-              <svg
-                class="w-4 h-4 m-auto fill-zinc-300"
-
-                viewBox="0 0 24 24"
-              >
-                <path d="M5 20h14v-2H5zm0-10h4v6h6v-6h4l-7-7z"></path>
-              </svg>
-            </button>
-          </form>
-
-          {
-            result?.error && (
-              <div class="p-2 text-center text-zinc-500">
-                {result.error.message}
-              </div>
-            )
-          }
-        </>
-      )
-    }
-
-    <div
-      class="py-4"
-
-      transition:persist
-    >
-      <noscript>
-        <div class="p-2 text-center text-zinc-500">
-          Playing audio requires JavaScript.
-        </div>
-      </noscript>
-
-      <Player client:only="solid-js" />
-    </div>
+    <Player client:only="solid-js" />
   </div>
 </Layout>

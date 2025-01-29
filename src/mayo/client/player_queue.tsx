@@ -89,6 +89,15 @@ const [
             > 0,
       );
 
+    const is_empty =
+      //
+      createMemo(
+        () =>
+          queue.length
+            //
+            === 0,
+      );
+
     if ("mediaSession" in navigator) {
       createEffect(
         () => {
@@ -119,7 +128,7 @@ const [
       createEffect(
         () => {
           if (
-            queue.length === 0
+            is_empty()
           ) {
             navigator.mediaSession.metadata = null;
 
@@ -466,15 +475,6 @@ const [
           current_track.render()
         );
       };
-
-    const is_empty =
-      //
-      createMemo(
-        () =>
-          queue.length
-            //
-            === 0,
-      );
 
     const play_now =
       //

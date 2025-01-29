@@ -246,17 +246,7 @@ export const player_audio_list_render =
 
     return (
       <>
-        <ol
-          //
-          class={
-            //
-            player_queue.is_empty()
-              //
-              ? "grid gap-1"
-              //
-              : "grid gap-1 pb-14"
-          }
-        >
+        <ol class="grid pb-15">
           <For
             //
             each={
@@ -422,10 +412,10 @@ export const player_audio_list_render =
                   //
                   class={
                     //
-                    `opacity-0 select-none ${
+                    `opacity-0 select-none first:rounded-t last:rounded-b ${
                       is_playable()
                         //
-                        ? "cursor-pointer rounded transition hover:bg-zinc-900 active:bg-zinc-800"
+                        ? "cursor-pointer transition hover:bg-zinc-900 active:bg-zinc-800"
                         //
                         : "brightness-60"
                     }`

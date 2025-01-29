@@ -475,13 +475,13 @@ const [
           //
           onClick={(e) => e.stopPropagation()}
         >
-          <menu class="grid divide-y divide-zinc-900 rounded bg-zinc-950">
+          <menu class="grid rounded bg-zinc-950">
             <For each={items()}>
               {item => (
-                <li>
+                <li class="first:rounded-t last:rounded-b transition hover:bg-zinc-900 active:bg-zinc-800">
                   <button
                     //
-                    class="w-full p-3 flex items-center gap-1 outline-none select-none cursor-pointer first:rounded-t last:rounded-b transition hover:bg-zinc-900 active:bg-zinc-800"
+                    class="w-full p-3 flex justify-center items-center gap-1 outline-none select-none cursor-pointer"
                     //
                     onClick={item.handler}
                   >
