@@ -6,7 +6,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onCleanup,
 } from "solid-js";
 
 import {
@@ -89,6 +88,56 @@ const [
             //
             > 0,
       );
+
+    if ("mediaSession" in navigator) {
+      createEffect(
+        () => {
+          navigator.mediaSession.setActionHandler(
+            //
+            "previoustrack",
+            //
+            has_previous_track()
+              //
+              ? play_previous_track
+              //
+              : null,
+          );
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "nexttrack",
+            //
+            has_next_track()
+              //
+              ? play_next_track
+              //
+              : null,
+          );
+        },
+      );
+
+      createEffect(
+        () => {
+          if (
+            queue.length === 0
+          ) {
+            navigator.mediaSession.metadata = null;
+
+            navigator.mediaSession.playbackState = "none";
+
+            navigator.mediaSession.setActionHandler("play", null);
+
+            navigator.mediaSession.setActionHandler("pause", null);
+
+            navigator.mediaSession.setActionHandler("seekbackward", null);
+
+            navigator.mediaSession.setActionHandler("seekforward", null);
+
+            navigator.mediaSession.setActionHandler("seekto", null);
+          }
+        },
+      );
+    }
 
     const play_next_track =
       //
@@ -254,28 +303,6 @@ const [
 
           navigator.mediaSession.setActionHandler(
             //
-            "previoustrack",
-            //
-            has_previous_track()
-              //
-              ? play_previous_track
-              //
-              : null,
-          );
-
-          navigator.mediaSession.setActionHandler(
-            //
-            "nexttrack",
-            //
-            has_next_track()
-              //
-              ? play_next_track
-              //
-              : null,
-          );
-
-          navigator.mediaSession.setActionHandler(
-            //
             "seekbackward",
             //
             (
@@ -330,26 +357,6 @@ const [
                     details.seekTime!
                 ),
           );
-
-          onCleanup(() => {
-            navigator.mediaSession.metadata = null;
-
-            navigator.mediaSession.playbackState = "none";
-
-            navigator.mediaSession.setActionHandler("play", null);
-
-            navigator.mediaSession.setActionHandler("pause", null);
-
-            navigator.mediaSession.setActionHandler("previoustrack", null);
-
-            navigator.mediaSession.setActionHandler("nexttrack", null);
-
-            navigator.mediaSession.setActionHandler("seekbackward", null);
-
-            navigator.mediaSession.setActionHandler("seekforward", null);
-
-            navigator.mediaSession.setActionHandler("seekto", null);
-          });
         }
 
         audio_element.play();
