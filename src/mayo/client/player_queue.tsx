@@ -6,6 +6,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
 } from "solid-js";
 
 import {
@@ -22,6 +23,8 @@ import {
 
 import {
   database_audio_get_stream_endpoint_path,
+  database_audio_get_thumbnail_endpoint_path,
+  database_audio_thumbnail_sizes,
 } from "@/mayo/common/database_audio";
 
 import type {
@@ -118,6 +121,12 @@ const [
 
         const {
           database_audio,
+
+          title,
+
+          artist,
+
+          album,
         } = player_audio;
 
         const [
@@ -163,19 +172,185 @@ const [
 
               pause:
                 //
-                () =>
+                () => {
                   set_paused(
                     true,
-                  ),
+                  );
+
+                  if ("mediaSession" in navigator) {
+                    navigator.mediaSession.playbackState =
+                      //
+                      "paused";
+                  }
+                },
 
               play:
                 //
-                () =>
+                () => {
                   set_paused(
                     false,
-                  ),
+                  );
+
+                  if ("mediaSession" in navigator) {
+                    navigator.mediaSession.playbackState =
+                      //
+                      "playing";
+                  }
+                },
             },
           );
+
+        if ("mediaSession" in navigator) {
+          const artwork =
+            //
+            database_audio.has_thumbnail
+              //
+              ? database_audio_thumbnail_sizes
+                //
+                .map(size => {
+                  return {
+                    src:
+                      //
+                      database_audio_get_thumbnail_endpoint_path(
+                        //
+                        database_audio,
+                        //
+                        size,
+                      ),
+
+                    sizes:
+                      //
+                      `${size}x${size}`,
+                  };
+                })
+              //
+              : [];
+
+          navigator.mediaSession.metadata =
+            //
+            new MediaMetadata({
+              title,
+
+              artist,
+
+              album,
+
+              artwork,
+            });
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "play",
+            //
+            () => audio_element.play(),
+          );
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "pause",
+            //
+            () => audio_element.pause(),
+          );
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "previoustrack",
+            //
+            has_previous_track()
+              //
+              ? play_previous_track
+              //
+              : null,
+          );
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "nexttrack",
+            //
+            has_next_track()
+              //
+              ? play_next_track
+              //
+              : null,
+          );
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "seekbackward",
+            //
+            (
+              details,
+            ) =>
+              audio_element.currentTime =
+                //
+                Math.max(
+                  //
+                  audio_element.currentTime - (details.seekOffset || 10),
+                  //
+                  0,
+                ),
+          );
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "seekforward",
+            //
+            (
+              details,
+            ) =>
+              audio_element.currentTime =
+                //
+                Math.min(
+                  //
+                  audio_element.currentTime + (details.seekOffset || 10),
+                  //
+                  audio_element.duration,
+                ),
+          );
+
+          navigator.mediaSession.setActionHandler(
+            //
+            "seekto",
+            //
+            (
+              details,
+            ) =>
+              (details.fastSeek
+                  //
+                  && "fastSeek" in audio_element)
+                //
+                ? (
+                  audio_element.fastSeek(
+                    details.seekTime!,
+                  )
+                ) //
+                : (
+                  audio_element.currentTime =
+                    //
+                    details.seekTime!
+                ),
+          );
+
+          onCleanup(() => {
+            navigator.mediaSession.metadata = null;
+
+            navigator.mediaSession.playbackState = "none";
+
+            navigator.mediaSession.setActionHandler("play", null);
+
+            navigator.mediaSession.setActionHandler("pause", null);
+
+            navigator.mediaSession.setActionHandler("previoustrack", null);
+
+            navigator.mediaSession.setActionHandler("nexttrack", null);
+
+            navigator.mediaSession.setActionHandler("seekbackward", null);
+
+            navigator.mediaSession.setActionHandler("seekforward", null);
+
+            navigator.mediaSession.setActionHandler("seekto", null);
+          });
+        }
 
         audio_element.play();
 
