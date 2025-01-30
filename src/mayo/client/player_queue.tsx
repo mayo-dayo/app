@@ -482,15 +482,13 @@ const [
         player_audio:
           //
           player_audio,
-      ) =>
-        queue.splice(
-          //
-          0,
-          //
-          queue.length,
-          //
+      ) => {
+        queue.length = 0;
+
+        queue.push(
           player_audio,
         );
+      };
 
     const play_next =
       //
