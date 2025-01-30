@@ -6,6 +6,14 @@ import {
   MultiProvider,
 } from "@solid-primitives/context";
 
+import type {
+  locals_user,
+} from "@/mayo/common/locals_user";
+
+import {
+  UserProvider,
+} from "@/mayo/client/user_provider";
+
 import {
   PlayerQueueProvider,
 } from "@/mayo/client/player_queue";
@@ -18,21 +26,33 @@ import {
   player_audio_list_render,
 } from "@/mayo/client/player_audio_list";
 
-const Player: Component =
+type props =
   //
-  () => {
-    return (
-      <MultiProvider
-        //
-        values={[
-          PlayerQueueProvider,
-
-          PlayerAudioMenuProvider,
-        ]}
-      >
-        {player_audio_list_render()}
-      </MultiProvider>
-    );
+  {
+    user?:
+      //
+      locals_user;
   };
+
+const Player: Component<props> =
+  //
+  (
+    {
+      user,
+    },
+  ) => (
+    <MultiProvider
+      //
+      values={[
+        [UserProvider, user],
+
+        PlayerQueueProvider,
+
+        PlayerAudioMenuProvider,
+      ]}
+    >
+      {player_audio_list_render()}
+    </MultiProvider>
+  );
 
 export default Player;

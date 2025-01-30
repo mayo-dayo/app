@@ -16,6 +16,10 @@ import Player from "@/mayo/client/Player";
       </div>
     </noscript>
 
-    <Player client:only="solid-js" />
+    <Player
+      client:only="solid-js"
+
+      user={Astro.locals.user}
+    />
   </div>
 </Layout>

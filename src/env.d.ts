@@ -16,15 +16,6 @@ declare module App {
 
     user?:
       //
-      Pick<
-        //
-        import("@/mayo/common/database_user").database_user,
-        //
-        | "id"
-        //
-        | "name"
-        //
-        | "perms"
-      >;
+      import("@/mayo/common/locals_user").locals_user;
   }
 }

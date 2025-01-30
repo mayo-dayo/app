@@ -1,10 +1,18 @@
 import type {
+  locals_user,
+} from "@/mayo/common/locals_user";
+
+import type {
   database_audio,
 } from "@/mayo/common/database_audio";
 
 const offline_storage_open =
   //
-  (): Promise<
+  (
+    user:
+      //
+      locals_user,
+  ): Promise<
     IDBDatabase
   > =>
     new Promise((
@@ -17,7 +25,7 @@ const offline_storage_open =
         //
         indexedDB.open(
           //
-          "offline-audio",
+          `offline-audio-${user.id}`,
           //
           1,
         );
@@ -113,15 +121,20 @@ export type offline_audio =
 export const offline_audio_get =
   //
   (
-    {
-      id,
-    }:
+    //
+    user:
+      //
+      locals_user,
+    //
+    database_audio:
       //
       database_audio,
   ): Promise<
     offline_audio | null
   > =>
-    offline_storage_open()
+    offline_storage_open(
+      user,
+    )
       //
       .then(offline_storage =>
         new Promise<
@@ -140,7 +153,9 @@ export const offline_audio_get =
               //
               .objectStore("offline-audio")
               //
-              .get(id);
+              .get(
+                database_audio.id,
+              );
 
           request.onerror =
             //
@@ -167,11 +182,18 @@ export const offline_audio_get =
 export const offline_audio_create =
   //
   (
+    //
+    user:
+      //
+      locals_user,
+    //
     database_audio:
       //
       database_audio,
   ) =>
-    offline_storage_open()
+    offline_storage_open(
+      user,
+    )
       //
       .then(offline_storage =>
         new Promise((

@@ -23,6 +23,10 @@ import {
   offset,
 } from "@floating-ui/dom";
 
+import {
+  use_user,
+} from "@/mayo/client/user_provider";
+
 import type {
   player_audio,
 } from "@/mayo/client/player_audio";
@@ -109,6 +113,14 @@ const [
       );
     }
   });
+
+  const user =
+    //
+    use_user();
+
+  const player_queue =
+    //
+    use_player_queue()!;
 
   const [
     position,
@@ -236,24 +248,27 @@ const [
       current_context,
     ) => {
       if (
-        current_context
-          //
-          === "undefined"
+        user !== undefined
       ) {
-        return;
+        if (
+          current_context !== "undefined"
+        ) {
+          const {
+            player_audio: {
+              database_audio,
+            },
+          } = current_context;
+
+          return (
+            offline_audio_get(
+              //
+              user,
+              //
+              database_audio,
+            )
+          );
+        }
       }
-
-      const {
-        player_audio: {
-          database_audio,
-        },
-      } = current_context;
-
-      return (
-        offline_audio_get(
-          database_audio,
-        )
-      );
     },
   );
 
@@ -336,26 +351,33 @@ const [
   const handle_download =
     //
     () => {
-      const current_context =
-        //
-        context();
-
       if (
-        current_context !== "undefined"
+        user !== undefined
       ) {
-        const {
-          player_audio: {
+        const current_context =
+          //
+          context();
+
+        if (
+          current_context !== "undefined"
+        ) {
+          const {
+            player_audio: {
+              database_audio,
+            },
+          } = current_context;
+
+          offline_audio_create(
+            //
+            user,
+            //
             database_audio,
-          },
-        } = current_context;
+          );
 
-        offline_audio_create(
-          database_audio,
-        );
-
-        set_context(
-          "undefined",
-        );
+          set_context(
+            "undefined",
+          );
+        }
       }
     };
 
@@ -449,10 +471,6 @@ const [
           !== undefined
       )
     );
-
-  const player_queue =
-    //
-    use_player_queue()!;
 
   const render =
     //
