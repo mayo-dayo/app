@@ -87,34 +87,9 @@ export const player_audio_list_render =
 
       {
         end,
-
-        setPages,
       },
     ] = createInfiniteScroll(
       fetch_page,
-    );
-
-    // Swap occurs when the upload form is submitted.
-    const handle_swap =
-      //
-      () =>
-        fetch_page(0)
-          //
-          .then(page =>
-            setPages(
-              page,
-            )
-          );
-
-    makeEventListener(
-      //
-      document,
-      //
-      "astro:after-swap",
-      //
-      handle_swap,
-      //
-      { passive: true },
     );
 
     const timers =
