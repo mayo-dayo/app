@@ -374,6 +374,8 @@ const [
             database_audio,
           );
 
+          navigator.storage.persist();
+
           set_context(
             "undefined",
           );
