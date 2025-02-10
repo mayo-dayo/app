@@ -1,0 +1,25 @@
+---
+import Layout from "./Layout.astro";
+
+import Navigation from "./Navigation.astro";
+
+import {
+  Queue,
+} from "./Queue";
+---
+
+<Layout>
+  <script src="./downloader_init.ts" />
+
+  <script src="./search_init.ts" />
+
+  <Navigation />
+
+  <slot />
+
+  <Queue
+    client:only="solid-js"
+
+    transition:persist
+  />
+</Layout>
