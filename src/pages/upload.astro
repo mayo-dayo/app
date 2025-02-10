@@ -1,0 +1,73 @@
+---
+import PlayerLayout from "@/lib/client/PlayerLayout.astro";
+
+import {
+  perms_can_upload,
+} from "@/lib/perms";
+
+import {
+  actions,
+} from "astro:actions";
+
+const user = Astro.locals.user;
+
+if (user === undefined) {
+  return Astro.redirect("/sign-up");
+}
+
+if ((user.perms & perms_can_upload) === 0) {
+  return Astro.redirect("/");
+}
+
+const result = Astro.getActionResult(actions.audio.create);
+
+if (result && !result.error) {
+  return Astro.redirect("/upload");
+}
+---
+
+<PlayerLayout>
+  <form
+    class="max-w-md h-14 pb-4 flex items-center gap-2"
+
+    method="POST"
+
+    enctype="multipart/form-data"
+
+    action={actions.audio.create}
+  >
+    <input
+      class="w-0 grow cursor-pointer file:mr-2 file:bg-transparent file:border-none file:text-zinc-800"
+
+      name="data"
+
+      type="file"
+
+      accept="audio/*,video/*"
+
+      multiple
+
+      required
+    />
+
+    <button
+      class="w-8 h-8 flex rounded-full cursor-pointer bg-transparent transition hover:bg-zinc-900 active:bg-zinc-800"
+    >
+      <svg
+        class="w-4 h-4 m-auto fill-zinc-300"
+
+        viewBox="0 0 24 24"
+      >
+        <path d="M5 20h14v-2H5zm0-10h4v6h6v-6h4l-7-7z"></path>
+      </svg>
+    </button>
+  </form>
+
+  {
+    result?.error && (
+      <div class="p-2 text-center text-zinc-500">
+        {result.error.message}
+      </div>
+    )
+  }
+</PlayerLayout>

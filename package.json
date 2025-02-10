@@ -1,0 +1,30 @@
+{
+  "name": "app",
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/solid-js": "^5.0.4",
+    "@floating-ui/dom": "^1.6.13",
+    "@fontsource/noto-sans-jp": "^5.1.1",
+    "@solid-primitives/audio": "^1.4.0",
+    "@solid-primitives/context": "^0.3.0",
+    "@solid-primitives/event-listener": "^2.4.0",
+    "@solid-primitives/pagination": "^0.4.0",
+    "@solid-primitives/timer": "^1.4.0",
+    "@tailwindcss/vite": "^4.0.5",
+    "@types/bun": "^1.2.2",
+    "@types/mime-types": "^2.1.4",
+    "@types/range-parser": "^1.2.7",
+    "astro": "^5.2.5",
+    "long-press-event": "^2.5.0",
+    "mime-types": "^2.1.35",
+    "oxlint": "^0.15.10",
+    "range-parser": "^1.2.1",
+    "rolldown": "^1.0.0-beta.3",
+    "solid-js": "^1.9.4",
+    "tailwindcss": "^4.0.5",
+    "typescript": "^5.7.3",
+    "workbox-precaching": "^7.3.0",
+    "workbox-routing": "^7.3.0",
+    "workbox-strategies": "^7.3.0"
+  }
+}

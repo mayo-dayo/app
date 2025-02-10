@@ -1,0 +1,67 @@
+---
+import Layout from "./Layout.astro";
+
+import {
+  Queue,
+} from "./Queue";
+---
+
+<Layout>
+  <slot />
+
+  <Queue
+    client:only="solid-js"
+
+    transition:name="queue"
+
+    transition:persist
+  />
+</Layout>
+
+<script>
+const worker = new Worker(new URL("./Downloader.ts", import.meta.url), {
+  type: "module",
+});
+
+const handle_run =
+  //
+  () =>
+    worker.postMessage(
+      {
+        command:
+          //
+          "run",
+      },
+    );
+
+const handle_remove =
+  //
+  (e: CustomEvent<{ audio_id: string }>) =>
+    worker.postMessage(
+      {
+        command:
+          //
+          "remove",
+
+        audio_id:
+          //
+          e.detail.audio_id,
+      },
+    );
+
+handle_run();
+
+window.addEventListener(
+  //
+  "downloader-run",
+  //
+  handle_run,
+);
+
+window.addEventListener(
+  //
+  "downloader-remove",
+  //
+  handle_remove as EventListener,
+);
+</script>

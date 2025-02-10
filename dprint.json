@@ -1,0 +1,18 @@
+{
+  "markup": {
+    "maxAttrsPerLine": 1
+  },
+  "typescript": {
+    "importDeclaration.forceMultiLine": "always"
+  },
+  "excludes": [
+    "**/node_modules"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.93.2.wasm",
+    "https://plugins.dprint.dev/json-0.19.4.wasm",
+    "https://plugins.dprint.dev/markdown-0.17.8.wasm",
+    "https://r2.clumsy.fish/markup_fmt.wasm",
+    "https://plugins.dprint.dev/dockerfile-0.3.2.wasm"
+  ]
+}

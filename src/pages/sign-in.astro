@@ -1,0 +1,120 @@
+---
+import Layout from "@/lib/client/Layout.astro";
+
+import {
+  actions,
+} from "astro:actions";
+
+const result = Astro.getActionResult(actions.authentication.sign_in);
+
+if (result?.data) {
+  Astro.cookies.set(
+    //
+    "token",
+    //
+    result.data,
+    //
+    {
+      path:
+        //
+        "/",
+
+      secure:
+        //
+        true,
+
+      httpOnly:
+        //
+        true,
+    },
+  );
+
+  return Astro.redirect("/");
+}
+---
+
+<Layout>
+  <form
+    class="w-full max-w-xs m-auto space-y-2"
+
+    method="POST"
+
+    action={actions.authentication.sign_in}
+
+    data-astro-reload
+  >
+    <div
+      class="space-y-2"
+
+      transition:animate="slide"
+    >
+      <h1 class="mb-6 text-xl font-semibold">
+        Sign In
+      </h1>
+
+      <label class="block space-y-2">
+        <div>Username</div>
+
+        <input
+          class="w-full h-10 px-2 rounded bg-transparent border border-zinc-900 focus:border-zinc-800 outline-none placeholder:text-zinc-900"
+
+          type="text"
+
+          name="username"
+
+          minlength="3"
+
+          maxlength="24"
+
+          pattern="^[a-zA-Z0-9]*$"
+
+          required
+
+          placeholder="Username"
+        />
+      </label>
+
+      <label class="block space-y-2">
+        <div>Password</div>
+
+        <input
+          class="w-full h-10 font-sans px-2 rounded bg-transparent border border-zinc-900 focus:border-zinc-800 outline-none placeholder:text-zinc-900"
+
+          type="password"
+
+          name="password"
+
+          minlength="8"
+
+          maxlength="64"
+
+          required
+
+          placeholder="****************"
+        />
+      </label>
+
+      <a
+        class="block cursor-pointer transition text-zinc-600 hover:text-zinc-500 active:text-zinc-400"
+
+        href="/sign-up"
+      >
+        I do not have an account
+      </a>
+    </div>
+
+    <button
+      class="w-full h-10 cursor-pointer rounded transition bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700"
+    >
+      Continue
+    </button>
+
+    {
+      result?.error && (
+        <div class="absolute text-zinc-500 left-1/2 transform -translate-x-1/2">
+          {result.error.message}
+        </div>
+      )
+    }
+  </form>
+</Layout>

@@ -1,0 +1,164 @@
+---
+import {
+  ClientRouter,
+} from "astro:transitions";
+
+import Navigation from "./Navigation.astro";
+
+import "@fontsource/noto-sans-jp";
+
+const user = Astro.locals.user;
+---
+
+<html
+  class="bg-zinc-950"
+
+  style="scrollbar-gutter: stable; scrollbar-width: thin"
+
+  lang="en"
+
+  transition:name="root"
+
+  transition:animate="none"
+>
+  <head>
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+
+      content="width=device-width, initial-scale=1"
+    />
+
+    <meta
+      name="description"
+
+      content="A self-hostable, web-based audio streaming platform."
+    />
+
+    <title>Mayo</title>
+
+    <link
+      rel="manifest"
+
+      href="manifest.json"
+    />
+
+    <link
+      rel="icon"
+
+      type="image/png"
+
+      sizes="16x16"
+
+      href="favicon-16x16.png"
+    />
+
+    <link
+      rel="icon"
+
+      type="image/png"
+
+      sizes="32x32"
+
+      href="favicon-32x32.png"
+    />
+
+    <link
+      rel="icon"
+
+      type="image/png"
+
+      sizes="48x48"
+
+      href="favicon-48x48.png"
+    />
+
+    <link
+      rel="icon"
+
+      type="image/png"
+
+      sizes="64x64"
+
+      href="favicon-64x64.png"
+    />
+
+    <link
+      rel="icon"
+
+      type="image/png"
+
+      sizes="128x128"
+
+      href="favicon-128x128.png"
+    />
+
+    <link
+      rel="apple-touch-icon"
+
+      type="image/png"
+
+      sizes="180x180"
+
+      href="apple-touch-icon-180x180.png"
+    />
+
+    <link
+      rel="apple-touch-icon"
+
+      type="image/png"
+
+      sizes="120x120"
+
+      href="apple-touch-icon-120x120.png"
+    />
+
+    <link
+      rel="apple-touch-icon"
+
+      type="image/png"
+
+      sizes="76x76"
+
+      href="apple-touch-icon-76x76.png"
+    />
+
+    <link
+      rel="apple-touch-icon"
+
+      type="image/png"
+
+      sizes="152x152"
+
+      href="apple-touch-icon-152x152.png"
+    />
+
+    <style is:global>
+    @import "tailwindcss";
+
+    /* https://github.com/tailwindlabs/tailwindcss/issues/15794 */
+    @source "./";
+
+    @theme {  
+      --font-display: 'Noto Sans JP', sans-serif;
+    }
+    </style>
+
+    <script>
+    navigator.serviceWorker.register("/sw.js");
+    </script>
+
+    <ClientRouter />
+  </head>
+
+  <body>
+    <div
+      class="max-w-md min-h-screen mx-auto p-4 flex flex-col gap-4 text-xs text-zinc-300 font-display selection:bg-zinc-700"
+    >
+      {Boolean(user) && <Navigation />}
+
+      <slot />
+    </div>
+  </body>
+</html>

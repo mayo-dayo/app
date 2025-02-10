@@ -1,0 +1,21 @@
+---
+import PlayerLayout from "@/lib/client/PlayerLayout.astro";
+
+import {
+  List,
+} from "@/lib/client/All";
+---
+
+<PlayerLayout>
+  <noscript>
+    <div class="p-2 text-center text-zinc-500">
+      This feature requires JavaScript.
+    </div>
+  </noscript>
+
+  <List
+    client:only="solid-js"
+
+    user={Astro.locals.user}
+  />
+</PlayerLayout>

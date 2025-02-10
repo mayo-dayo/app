@@ -1,0 +1,91 @@
+---
+import {
+  perms_can_upload,
+} from "@/lib/perms";
+
+const items =
+  //
+  [
+    {
+      pathname:
+        //
+        "/",
+
+      label:
+        //
+        "All",
+
+      icon:
+        //
+        "M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-40-82v-78q-33 0-56.5-23.5T360-320v-40L168-552q-3 18-5.5 36t-2.5 36q0 121 79.5 212T440-162Zm276-102q41-45 62.5-100.5T800-480q0-98-54.5-179T600-776v16q0 33-23.5 56.5T520-680h-80v80q0 17-11.5 28.5T400-560h-80v80h240q17 0 28.5 11.5T600-440v120h40q26 0 47 15.5t29 40.5Z",
+    },
+
+    {
+      pathname:
+        //
+        "/downloads",
+
+      label:
+        //
+        "Downloads",
+
+      icon:
+        //
+        "M790-56 414-434q-47 11-87.5 33T254-346l-84-86q32-32 69-56t79-42l-90-90q-41 21-76.5 46.5T84-516L0-602q32-32 66.5-57.5T140-708l-84-84 56-56 736 736-58 56Zm-310-64q-42 0-71-29.5T380-220q0-42 29-71t71-29q42 0 71 29t29 71q0 41-29 70.5T480-120Zm236-238-29-29-29-29-144-144q81 8 151.5 41T790-432l-74 74Zm160-158q-77-77-178.5-120.5T480-680q-21 0-40.5 1.5T400-674L298-776q44-12 89.5-18t92.5-6q142 0 265 53t215 145l-84 86Z",
+    },
+  ];
+
+const user =
+  //
+  Astro.locals.user;
+
+if (user && (user.perms & perms_can_upload) !== 0) {
+  items.push(
+    {
+      pathname:
+        //
+        "/upload",
+
+      label:
+        //
+        "Upload",
+
+      icon:
+        //
+        "M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z",
+    },
+  );
+}
+---
+
+<nav>
+  <ul class="flex items-center gap-2">
+    {
+      items.map(item => (
+        <li>
+          <a
+            class={`px-3 py-2 flex justify-center items-center gap-1 rounded-full select-none transition ${
+            //
+            Astro.url.pathname === item.pathname
+              //
+              ? "bg-zinc-700 pointer-events-none"
+              //
+              : "cursor-pointer bg-zinc-900 hover:bg-zinc-800"}`}
+
+            href={item.pathname}
+          >
+            <svg
+              class="w-4 h-4 fill-zinc-300"
+
+              viewBox="0 -960 960 960"
+            >
+              <path d={item.icon} />
+            </svg>
+
+            {item.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
