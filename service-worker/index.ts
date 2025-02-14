@@ -48,41 +48,12 @@ export default function(): AstroIntegration {
                 } from "workbox-routing";
 
                 import {
-                  CacheOnly,
                   NetworkFirst,
                 } from "workbox-strategies";
 
-                precacheAndRoute(
-                  ${JSON.stringify(urls)},
-                );
+                precacheAndRoute(${JSON.stringify(urls)});
 
-                registerRoute(
-                  //
-                  ({ url }) => {
-                    if (
-                      url.pathname.startsWith("/_astro")
-                    ) {
-                      return false;
-                    }
-
-                    if (
-                      url.pathname === "/_actions"
-                    ) {
-                      return false;
-                    }
-
-                    return true;
-                  },
-                  //
-                  new NetworkFirst(),
-                );
-
-                registerRoute(
-                  //
-                  ({ url }) => url.pathname.startsWith("/_astro"),
-                  //
-                  new CacheOnly(),
-                );
+                registerRoute(({ url }) => !url.pathname.startsWith("/_"), new NetworkFirst());
               `;
 
             const temporary_file_path =
