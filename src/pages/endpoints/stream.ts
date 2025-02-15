@@ -132,6 +132,14 @@ export const GET: APIRoute =
       );
     }
 
+    const cache_visibility =
+      //
+      Bun.env.MAYO_AUTHENTICATION === "required"
+        //
+        ? "private"
+        //
+        : "public";
+
     const file_path =
       //
       audio_get_file_path_stream(
@@ -183,7 +191,7 @@ export const GET: APIRoute =
 
             "cache-control":
               //
-              "max-age=31536000, immutable",
+              `${cache_visibility}, max-age=31536000, immutable`,
           },
         },
       );
@@ -273,7 +281,7 @@ export const GET: APIRoute =
 
           "cache-control":
             //
-            "max-age=31536000, immutable",
+            `${cache_visibility}, max-age=31536000, immutable`,
         },
       },
     );
