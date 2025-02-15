@@ -3,6 +3,10 @@ import {
 } from "@/lib/server/context/get_or_init";
 
 import {
+  is_protected_route,
+} from "@/lib/server/is_protected_route";
+
+import {
   token,
 } from "@/lib/server/schema/token";
 
@@ -42,19 +46,7 @@ const authentication =
     //
     next,
   ) => {
-    const needs_authentication =
-      //
-      request.url.pathname === "/"
-      //
-      || request.url.pathname === "/downloads"
-      //
-      || request.url.pathname === "/upload"
-      //
-      || request.url.pathname === "/endpoints/stream"
-      //
-      || request.url.pathname.startsWith("/_actions");
-
-    if (needs_authentication === false) {
+    if (is_protected_route(request.url) === false) {
       return next();
     }
 

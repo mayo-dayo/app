@@ -3,6 +3,8 @@
 declare module "bun" {
   interface Env {
     MAYO_DATA_PATH: string;
+
+    MAYO_AUTHENTICATION: string;
   }
 }
 
