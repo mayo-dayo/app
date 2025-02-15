@@ -433,7 +433,7 @@ export const Queue: Component =
               />
 
               <div class="border-t border-zinc-900">
-                <div class="mx-auto max-w-md flex px-4">
+                <div class="mx-auto max-w-md flex px-4 py-2">
                   <PlayerAudio
                     //
                     player_audio={player_audio}
