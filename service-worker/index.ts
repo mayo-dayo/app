@@ -53,7 +53,7 @@ export default function(): AstroIntegration {
 
                 precacheAndRoute(${JSON.stringify(urls)});
 
-                registerRoute(({ url }) => !url.pathname.startsWith("/_"), new NetworkFirst());
+                registerRoute(({ url }) => !url.pathname.startsWith("/_") && !url.pathname.startsWith("/endpoints/stream"), new NetworkFirst());
               `;
 
             const temporary_file_path =
