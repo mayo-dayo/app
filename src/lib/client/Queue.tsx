@@ -608,6 +608,43 @@ export const Queue: Component =
         }
       };
 
+    const handle_shuffle_in =
+      //
+      (
+        event:
+          //
+          CustomEvent<player_audio>,
+      ) => {
+        if (track() === undefined) {
+          handle_play_now(
+            { detail: event.detail } as CustomEvent<player_audio>,
+          );
+        } else {
+          let random_index;
+          if (queue.length <= 1) {
+            random_index = 1;
+          } else {
+            do {
+              random_index =
+                //
+                Math.floor(
+                  //
+                  Math.random() * (queue.length + 1),
+                );
+            } while (random_index === index());
+          }
+
+          queue.splice(
+            //
+            random_index,
+            //
+            0,
+            //
+            event.detail,
+          );
+        }
+      };
+
     makeEventListener(
       //
       window,
@@ -637,6 +674,17 @@ export const Queue: Component =
       "play_later",
       //
       handle_play_later as EventListener,
+      //
+      { passive: true },
+    );
+
+    makeEventListener(
+      //
+      window,
+      //
+      "shuffle_in",
+      //
+      handle_shuffle_in as EventListener,
       //
       { passive: true },
     );
