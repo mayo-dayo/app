@@ -12,6 +12,7 @@ import type {
 } from "solid-js";
 
 import {
+  batch,
   createEffect,
   createMemo,
   createResource,
@@ -187,6 +188,33 @@ export const Queue: Component =
         );
       });
     }
+
+    const shuffle_queue =
+      //
+      () => {
+        batch(() => {
+          if (queue.length > 1) {
+            //
+            for (let i = queue.length - 1; i > 0; i--) {
+              const j =
+                //
+                Math.floor(
+                  Math.random() * (i + 1),
+                );
+
+              [queue[i], queue[j]] = [queue[j], queue[i]];
+            }
+
+            let new_index;
+
+            do {
+              new_index = Math.floor(Math.random() * queue.length);
+            } while (new_index === index());
+
+            set_index(new_index);
+          }
+        });
+      };
 
     const track =
       //
@@ -412,6 +440,22 @@ export const Queue: Component =
                   />
 
                   <menu class="ml-auto my-auto flex gap-2">
+                    <li>
+                      <button
+                        //
+                        class="w-8 h-8 flex cursor-pointer rounded-full transition hover:bg-zinc-900 active:bg-zinc-800"
+                        //
+                        onClick={shuffle_queue}
+                      >
+                        <svg
+                          class="w-4 h-4 m-auto fill-zinc-300"
+                          viewBox="0 -960 960 960"
+                        >
+                          <path d="M560-160v-80h104L537-367l57-57 126 126v-102h80v240H560Zm-344 0-56-56 504-504H560v-80h240v240h-80v-104L216-160Zm151-377L160-744l56-56 207 207-56 56Z" />
+                        </svg>
+                      </button>
+                    </li>
+
                     <li>
                       <button
                         //
