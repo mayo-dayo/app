@@ -51,6 +51,15 @@ export default function(): AstroIntegration {
                   NetworkFirst,
                 } from "workbox-strategies";
 
+                import {
+                  skipWaiting,
+                  clientsClaim,
+                } from "workbox-core";
+
+                skipWaiting();
+
+                clientsClaim();
+
                 precacheAndRoute(${JSON.stringify(urls)});
 
                 registerRoute(({ url }) => !url.pathname.startsWith("/_") && !url.pathname.startsWith("/endpoints/stream"), new NetworkFirst());
