@@ -247,15 +247,30 @@ export const Queue: Component =
                     ended:
                       //
                       () => {
-                        if (repeat() === "repeat-one") {
-                          audio_element.currentTime = 0;
-                          audio_element.play();
-                        } else {
-                          if (has_next_track()) {
-                            play_next_track();
-                          } else {
-                            queue.length = 0;
-                          }
+                        switch (repeat()) {
+                          case "repeat-one":
+                            audio_element.currentTime = 0;
+                            audio_element.play();
+                            break;
+                          case "repeat":
+                            if (queue.length === 1) {
+                              audio_element.currentTime = 0;
+                              audio_element.play();
+                            } else {
+                              if (has_next_track()) {
+                                play_next_track();
+                              } else {
+                                queue.length = 0;
+                              }
+                            }
+                            break;
+
+                          default:
+                            if (has_next_track()) {
+                              play_next_track();
+                            } else {
+                              queue.length = 0;
+                            }
                         }
                       },
 
