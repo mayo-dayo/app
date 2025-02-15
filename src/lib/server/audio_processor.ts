@@ -307,7 +307,9 @@ export class audio_processor {
           await Bun.readableStreamToJSON(proc.stdout),
         );
     } catch (e) {
-      throw new Error(`failed to parse the probe output: ${e}`);
+      this.set_processing_state_to_error(item.id);
+
+      return;
     }
 
     let has_audio = false, has_video = false;
