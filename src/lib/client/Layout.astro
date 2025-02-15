@@ -3,11 +3,7 @@ import {
   ClientRouter,
 } from "astro:transitions";
 
-import Navigation from "./Navigation.astro";
-
 import "@fontsource/noto-sans-jp";
-
-const user = Astro.locals.user;
 ---
 
 <html
@@ -156,8 +152,6 @@ const user = Astro.locals.user;
     <div
       class="max-w-md min-h-screen mx-auto p-4 flex flex-col gap-4 text-xs text-zinc-300 font-display selection:bg-zinc-700"
     >
-      {Boolean(user) && <Navigation />}
-
       <slot />
     </div>
   </body>

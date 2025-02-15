@@ -1,4 +1,6 @@
 ---
+import Navigation from "@/lib/client/Navigation.astro";
+
 import PlayerLayout from "@/lib/client/PlayerLayout.astro";
 
 import {
@@ -27,6 +29,8 @@ if (result && !result.error) {
 ---
 
 <PlayerLayout>
+  <Navigation />
+
   <form
     class="max-w-md h-14 pb-4 flex items-center gap-2"
 

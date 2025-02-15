@@ -42,7 +42,11 @@ const into_player_audio =
   //
   async (
     //
-    user:
+    batch:
+      //
+      audio[],
+    //
+    user?:
       //
       Pick<
         //
@@ -50,10 +54,6 @@ const into_player_audio =
         //
         "id" | "name" | "perms"
       >,
-    //
-    batch:
-      //
-      audio[],
   ) => {
     const is_downloaded_map: Array<boolean | null> =
       //
@@ -106,7 +106,7 @@ const into_player_audio =
 
           can_remove:
             //
-            audio.processing === 0 && (user.perms & perms_can_remove) !== 0,
+            audio.processing === 0 && (user !== undefined && (user.perms & perms_can_remove) !== 0),
 
           should_poll:
             //
@@ -199,7 +199,7 @@ const refetch =
   ): Promise<player_audio | null> => {
     const user =
       //
-      use_user()!;
+      use_user();
 
     return (
       actions.audio.get_one.orThrow(
@@ -214,9 +214,9 @@ const refetch =
             : (
               into_player_audio(
                 //
-                user,
-                //
                 [audio],
+                //
+                user,
               )
                 //
                 .then(result => result[0])
@@ -238,7 +238,7 @@ export const get_page =
   ): Promise<player_audio[]> => {
     const user =
       //
-      use_user()!;
+      use_user();
 
     return (
       actions.audio.get_page.orThrow(
@@ -248,9 +248,9 @@ export const get_page =
         .then(page =>
           into_player_audio(
             //
-            user,
-            //
             page,
+            //
+            user,
           )
         )
         //
