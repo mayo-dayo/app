@@ -15,14 +15,6 @@ import {
 } from "solid-js";
 
 import {
-  NetworkErrorProvider,
-} from "./network_error";
-
-import {
-  PlayerAudioMenuProvider,
-} from "./player_audio_menu";
-
-import {
   UserProvider,
 } from "./user";
 
@@ -69,10 +61,6 @@ export const Entrypoint =
             //
             values={[
               [UserProvider, user],
-
-              NetworkErrorProvider,
-
-              PlayerAudioMenuProvider,
             ]}
           >
             <Wrapped {...(others as P)} />

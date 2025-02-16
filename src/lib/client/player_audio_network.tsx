@@ -253,13 +253,5 @@ export const get_page =
             user,
           )
         )
-        //
-        .catch(() => {
-          window.dispatchEvent(
-            new CustomEvent("network-error"),
-          );
-
-          return [];
-        })
     );
   };
