@@ -46,9 +46,19 @@ const authentication =
     //
     next,
   ) => {
-    if (is_protected_route(request.url) === false) {
-      return next();
-    }
+    const on_error =
+      //
+      (
+        redirect:
+          //
+          string,
+      ) =>
+        //
+        is_protected_route(request.url)
+          //
+          ? request.redirect(redirect)
+          //
+          : next();
 
     let payload;
 
@@ -63,7 +73,7 @@ const authentication =
             ?.json(),
         );
     } catch (e) {
-      return request.redirect("/sign-up");
+      return on_error("/sign-up");
     }
 
     const {
@@ -82,7 +92,7 @@ const authentication =
           payload.user_id,
         )
     ) {
-      return request.redirect("/sign-in");
+      return on_error("/sign-in");
     }
 
     const user =
@@ -108,7 +118,7 @@ const authentication =
         .get(payload.user_id) as Pick<user, "name" | "perms"> | null;
 
     if (user === null) {
-      return request.redirect("/sign-up");
+      return on_error("/sign-up");
     }
 
     request.locals.user =
