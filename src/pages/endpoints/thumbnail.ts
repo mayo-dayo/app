@@ -127,7 +127,7 @@ export const GET: APIRoute =
 
             "cache-control":
               //
-              "max-age=31536000, immutable",
+              "public, max-age=31536000, immutable",
           },
       },
     );
