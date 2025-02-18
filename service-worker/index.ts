@@ -4,10 +4,6 @@ import type {
 
 import path from "node:path";
 
-import {
-  rolldown,
-} from "rolldown";
-
 export default function(): AstroIntegration {
   return {
     name:
@@ -81,31 +77,39 @@ export default function(): AstroIntegration {
             );
 
             try {
-              const bundle =
+              const {
+                outputs,
+              } = await Bun.build(
                 //
-                await rolldown(
-                  {
-                    input:
-                      //
-                      temporary_file_path,
-                  },
-                );
-
-              await bundle.write(
                 {
-                  file:
+                  entrypoints:
                     //
-                    path.join(
-                      //
-                      directory_path,
-                      //
-                      "sw.js",
-                    ),
+                    [temporary_file_path],
 
                   minify:
                     //
                     true,
                 },
+              );
+
+              if (outputs.length !== 1) {
+                throw new Error(`unexpected output length: ${outputs.length}`);
+              }
+
+              const dest =
+                //
+                path.join(
+                  //
+                  directory_path,
+                  //
+                  "sw.js",
+                );
+
+              await Bun.write(
+                //
+                dest,
+                //
+                outputs[0],
               );
             } finally {
               await temporary_file.delete();
