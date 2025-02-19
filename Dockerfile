@@ -16,6 +16,7 @@ RUN wget -O ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-relea
     cp $DIR/ffmpeg /usr/bin/ && \
     cp $DIR/ffprobe /usr/bin/ && \
     rm -rf $DIR ffmpeg.tar.xz
-COPY --from=build /mayo/dist dist
+COPY --from=build /mayo/dist/server.js server.js
+COPY --from=build /mayo/dist/client client
 
-ENTRYPOINT ["bun", "run", "dist/server/entry.mjs"]
+ENTRYPOINT ["bun", "run", "./server.js"]

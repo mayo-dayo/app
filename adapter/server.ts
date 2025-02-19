@@ -39,7 +39,7 @@ export const start =
   ) => {
     const client_directory_path =
       //
-      path.resolve(Bun.main, "..", "..", "client");
+      path.join(path.dirname(Bun.main), "client");
 
     const app =
       //

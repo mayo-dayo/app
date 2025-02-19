@@ -11,6 +11,8 @@ import adapter from "./adapter";
 
 import compression from "./integrations/compression";
 
+import fatServer from "./integrations/fat-server";
+
 import serviceWorker from "./integrations/service-worker";
 
 export default defineConfig(
@@ -35,6 +37,8 @@ export default defineConfig(
         serviceWorker(),
 
         compression(),
+
+        fatServer(),
       ],
 
     image:
