@@ -16,7 +16,9 @@ RUN wget -O ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-relea
     cp $DIR/ffmpeg /usr/bin/ && \
     cp $DIR/ffprobe /usr/bin/ && \
     rm -rf $DIR ffmpeg.tar.xz
-COPY --from=build /mayo/dist/server.js server.js
+COPY --from=build /mayo/dist/entry.js entry.js
 COPY --from=build /mayo/dist/client client
+# https://github.com/oven-sh/bun/issues/17454
+RUN sed -i 's/var replace = ""/var { replace } = ""/g' entry.js
 
-ENTRYPOINT ["bun", "run", "./server.js"]
+ENTRYPOINT ["bun", "run", "./entry.js"]

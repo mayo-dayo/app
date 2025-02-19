@@ -31,45 +31,21 @@ export default function(): AstroIntegration {
                 "entry.mjs",
               );
 
-            const {
-              outputs,
-            } = await Bun.build(
+            await Bun.build(
               //
               {
                 entrypoints:
                   //
                   [entrypoint],
 
-                minify:
-                  //
-                  true,
-
                 target:
                   //
                   "bun",
+
+                outdir:
+                  //
+                  "dist",
               },
-            );
-
-            if (outputs.length !== 1) {
-              throw new Error(`unexpected output length: ${outputs.length}`);
-            }
-
-            const dest =
-              //
-              path.resolve(
-                //
-                directory_path,
-                //
-                "..",
-                //
-                "server.js",
-              );
-
-            await Bun.write(
-              //
-              dest,
-              //
-              outputs[0],
             );
           },
       },
