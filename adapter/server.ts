@@ -39,11 +39,7 @@ export const start =
   ) => {
     const client_directory_path =
       //
-      Bun.env.MAYO_CLIENT_DIRECTORY_PATH;
-
-    if (client_directory_path === undefined) {
-      throw new Error("`MAYO_CLIENT_DIRECTORY_PATH` is not set");
-    }
+      path.resolve(Bun.main, "..", "..", "client");
 
     const app =
       //
