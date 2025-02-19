@@ -10,6 +10,8 @@ import mime from "mime-types";
 
 import path from "node:path";
 
+import file_extensions_for_compression from "../file-extensions-for-compression";
+
 export const createExports =
   //
   (
@@ -37,39 +39,21 @@ export const start =
   ) => {
     const client_directory_path =
       //
-      Bun.env.CLIENT_DIRECTORY_PATH;
+      Bun.env.MAYO_CLIENT_DIRECTORY_PATH;
 
     if (client_directory_path === undefined) {
-      throw new Error(
-        "`CLIENT_DIRECTORY_PATH` is not set",
-      );
+      throw new Error("`MAYO_CLIENT_DIRECTORY_PATH` is not set");
     }
 
     const app =
       //
       new App(manifest);
 
-    const tls_crt_path =
-      //
-      Bun.env.TLS_CRT_PATH;
-
-    const tls_key_path =
-      //
-      Bun.env.TLS_KEY_PATH;
-
     const tls =
       //
-      (tls_crt_path !== undefined && tls_key_path !== undefined)
+      (Bun.env.MAYO_TLS_CRT && Bun.env.MAYO_TLS_KEY)
         //
-        ? {
-          cert:
-            //
-            Bun.file(tls_crt_path),
-
-          key:
-            //
-            Bun.file(tls_key_path),
-        }
+        ? { cert: Bun.env.MAYO_TLS_CRT, key: Bun.env.MAYO_TLS_KEY }
         //
         : undefined;
 
@@ -113,7 +97,7 @@ export const start =
 
                 clientAddress:
                   //
-                  server.requestIP(req)?.address ?? undefined,
+                  server.requestIP(req)?.address,
 
                 routeData,
               },
@@ -127,18 +111,11 @@ export const start =
 
         const file_path =
           //
-          path.join(
-            //
-            client_directory_path,
-            //
-            url.pathname,
-          );
+          path.join(client_directory_path, url.pathname);
 
         const file =
           //
-          Bun.file(
-            file_path,
-          );
+          Bun.file(file_path);
 
         if (await file.exists() === false) {
           return (
@@ -159,22 +136,25 @@ export const start =
           //
           new Headers();
 
-        const content_type =
+        const extension =
           //
-          mime.lookup(
-            path
-              //
-              .extname(url.pathname)
-              //
-              .slice(1),
-          ) || "application/octet-stream";
+          path.extname(url.pathname).slice(1);
 
         headers.set(
           //
           "content-type",
           //
-          content_type,
+          mime.lookup(extension) || "application/octet-stream",
         );
+
+        if (file_extensions_for_compression.includes(extension)) {
+          headers.set(
+            //
+            "content-encoding",
+            //
+            "br",
+          );
+        }
 
         if (url.pathname.startsWith("/_astro/")) {
           headers.set(

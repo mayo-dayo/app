@@ -9,7 +9,9 @@ import {
 
 import adapter from "./adapter";
 
-import serviceWorker from "./service-worker";
+import compression from "./integrations/compression";
+
+import serviceWorker from "./integrations/service-worker";
 
 export default defineConfig(
   {
@@ -28,9 +30,11 @@ export default defineConfig(
     integrations:
       //
       [
+        solidJs(),
+
         serviceWorker(),
 
-        solidJs(),
+        compression(),
       ],
 
     image:
