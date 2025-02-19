@@ -48,11 +48,10 @@ export default function(): AstroIntegration {
                 } from "workbox-strategies";
 
                 import {
-                  skipWaiting,
                   clientsClaim,
                 } from "workbox-core";
 
-                skipWaiting();
+                self.skipWaiting();
 
                 clientsClaim();
 
