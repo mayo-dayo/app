@@ -16,4 +16,4 @@ dev: default
     bunx --bun astro dev
 
 build: default
-    docker build . -t ghcr.io/mayo-dayo/app:0.2
+    docker build . -t ghcr.io/mayo-dayo/app:0.3
