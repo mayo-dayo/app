@@ -10,9 +10,9 @@ To enforce authentication, `MAYO_AUTHENTICATION` must be set to `required`, in w
 
 ### HTTP server
 
-To change the default HTTP server port, set one of `PORT`, `BUN_PORT` or `NODE_PORT` to your desired port. 
+To change the default HTTP server port, set one of `PORT`, `BUN_PORT` or `NODE_PORT` to your desired port.
 
-The default port is `3000`. 
+The default port is `3000`.
 
 To cause the HTTP server to use TLS, both of the following must be set:
 

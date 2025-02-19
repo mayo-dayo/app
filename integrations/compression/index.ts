@@ -33,7 +33,7 @@ export default function(): AstroIntegration {
               new Bun.Glob(`**/*.{${file_extensions_for_compression.join(",")}}`);
 
             for await (const relative_path of glob.scan(directory_path)) {
-              const file_path = 
+              const file_path =
                 //
                 path.join(directory_path, relative_path);
 
