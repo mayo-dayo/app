@@ -25,6 +25,7 @@
         "solid-js": "^1.9.4",
         "tailwindcss": "^4.0.5",
         "typescript": "^5.7.3",
+        "workbox-cacheable-response": "^7.3.0",
         "workbox-core": "^7.3.0",
         "workbox-precaching": "^7.3.0",
         "workbox-routing": "^7.3.0",
@@ -1024,6 +1025,8 @@
     "which-pm-runs": ["which-pm-runs@1.1.0", "", {}, "sha512-n1brCuqClxfFfq/Rb0ICg9giSZqCS+pLtccdag6C2HyufBrh3fBOiy9nb6ggRMvWOVH5GrdJskj5iGTZNxd7SA=="],
 
     "widest-line": ["widest-line@5.0.0", "", { "dependencies": { "string-width": "^7.0.0" } }, "sha512-c9bZp7b5YtRj2wOe6dlj32MK+Bx/M/d+9VB2SHM1OtsUHR0aV0tdP6DWh/iMt0kWi1t5g1Iudu6hQRNd1A4PVA=="],
+
+    "workbox-cacheable-response": ["workbox-cacheable-response@7.3.0", "", { "dependencies": { "workbox-core": "7.3.0" } }, "sha512-eAFERIg6J2LuyELhLlmeRcJFa5e16Mj8kL2yCDbhWE+HUun9skRQrGIFVUagqWj4DMaaPSMWfAolM7XZZxNmxA=="],
 
     "workbox-core": ["workbox-core@7.3.0", "", {}, "sha512-Z+mYrErfh4t3zi7NVTvOuACB0A/jA3bgxUN3PwtAVHvfEsZxV9Iju580VEETug3zYJRc0Dmii/aixI/Uxj8fmw=="],
 

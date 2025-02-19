@@ -36,6 +36,14 @@ export default function(): AstroIntegration {
               //
               `
                 import {
+                  CacheableResponsePlugin
+                } from "workbox-cacheable-response";
+
+                import {
+                  clientsClaim,
+                } from "workbox-core";
+
+                import {
                   precacheAndRoute,
                 } from "workbox-precaching";
 
@@ -47,17 +55,58 @@ export default function(): AstroIntegration {
                   NetworkFirst,
                 } from "workbox-strategies";
 
-                import {
-                  clientsClaim,
-                } from "workbox-core";
-
                 self.skipWaiting();
 
                 clientsClaim();
 
                 precacheAndRoute(${JSON.stringify(urls)});
 
-                registerRoute(({ url }) => !url.pathname.startsWith("/_") && !url.pathname.startsWith("/endpoints/stream"), new NetworkFirst());
+                const shouldCache = 
+                  //
+                  (url: URl): boolean => {
+                    if (url.pathname.startsWith("/_")) {
+                      return false;
+                    }
+
+                    if (url.pathname === "/endpoints/stream") {
+                      return false;
+                    }
+
+                    if (url.pathname === "/upload") {
+                      return false;
+                    }
+
+                    if (url.pathname === "/sign-in") {
+                      return false;
+                    }
+
+                    if (url.pathname === "/sign-up") {
+                      return false;
+                    }
+
+                    return true;
+                  };
+
+                registerRoute(
+                  //
+                  ({ url }) => shouldCache(url), 
+                  //
+                  new NetworkFirst(
+                    //
+                    {
+                      plugins:
+                        //
+                        [
+                          new CacheableResponsePlugin(
+                            //
+                            {
+                              statuses: [0, 200]
+                            }
+                          )
+                        ]
+                    }
+                  )
+                );
               `;
 
             const temporary_file_path =
