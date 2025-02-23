@@ -146,7 +146,7 @@ export const render_player_audio =
         }
       >
         {duration => (
-          <div class="ml-auto my-auto text-zinc-500">
+          <div class="ml-auto my-auto text-zinc-400">
             {format_duration(duration())}
           </div>
         )}
