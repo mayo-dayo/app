@@ -366,40 +366,6 @@ export const Queue: Component =
 
                 navigator.mediaSession.setActionHandler(
                   //
-                  "seekbackward",
-                  //
-                  (
-                    details,
-                  ) =>
-                    audio_element.currentTime =
-                      //
-                      Math.max(
-                        //
-                        audio_element.currentTime - (details.seekOffset || 10),
-                        //
-                        0,
-                      ),
-                );
-
-                navigator.mediaSession.setActionHandler(
-                  //
-                  "seekforward",
-                  //
-                  (
-                    details,
-                  ) =>
-                    audio_element.currentTime =
-                      //
-                      Math.min(
-                        //
-                        audio_element.currentTime + (details.seekOffset || 10),
-                        //
-                        audio_element.duration,
-                      ),
-                );
-
-                navigator.mediaSession.setActionHandler(
-                  //
                   "seekto",
                   //
                   (
