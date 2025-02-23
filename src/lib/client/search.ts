@@ -273,6 +273,49 @@ if (sync_access_handle) {
     //
     await storage_connect();
 
+  const save =
+    //
+    async () => {
+      console.time("to vacuum");
+
+      try {
+        await index.vacuum();
+      } finally {
+        console.timeEnd("to vacuum");
+      }
+
+      console.time("to persist");
+
+      try {
+        const array =
+          //
+          new TextEncoder()
+            //
+            .encode(
+              JSON.stringify(index),
+            );
+
+        const data_view =
+          //
+          new DataView(
+            //
+            array.buffer,
+            //
+            array.byteOffset,
+            //
+            array.byteLength,
+          );
+
+        sync_access_handle.truncate(0);
+
+        sync_access_handle.write(data_view);
+
+        sync_access_handle.flush();
+      } finally {
+        console.timeEnd("to persist");
+      }
+    };
+
   const run =
     //
     async () => {
@@ -319,44 +362,7 @@ if (sync_access_handle) {
           console.timeEnd("to index");
         }
 
-        console.time("to vacuum");
-
-        try {
-          await index.vacuum();
-        } finally {
-          console.timeEnd("to vacuum");
-        }
-
-        console.time("to persist");
-
-        try {
-          const array =
-            //
-            new TextEncoder()
-              //
-              .encode(
-                JSON.stringify(index),
-              );
-
-          const data_view =
-            //
-            new DataView(
-              //
-              array.buffer,
-              //
-              array.byteOffset,
-              //
-              array.byteLength,
-            );
-
-          sync_access_handle.truncate(0);
-
-          sync_access_handle.write(data_view);
-
-          sync_access_handle.flush();
-        } finally {
-          console.timeEnd("to persist");
-        }
+        await save();
 
         console.groupEnd();
 
@@ -379,7 +385,7 @@ if (sync_access_handle) {
         console.warn(`uncaught error while indexing: ${e}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1 * 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   })();
 
@@ -417,13 +423,21 @@ if (sync_access_handle) {
         id,
       )
         //
-        .then(storage_audio => {
+        .then(async storage_audio => {
           if (storage_audio) {
             const document =
               //
               storage_audio_to_document(storage_audio);
 
             index.remove(document);
+
+            console.groupCollapsed(document.id);
+
+            try {
+              await save();
+            } finally {
+              console.groupEnd();
+            }
           }
         });
 
