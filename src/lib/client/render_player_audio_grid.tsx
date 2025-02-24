@@ -21,11 +21,6 @@ import {
   createInfiniteScroll,
 } from "./create_infinite_scroll";
 
-import {
-  create_layout_switcher,
-  render_layout_switcher,
-} from "./layout_switcher";
-
 import type {
   player_audio,
 } from "./player_audio";
@@ -39,12 +34,8 @@ import {
 } from "./render_player_audio_context_menu";
 
 import {
-  render_player_audio_grid,
-} from "./render_player_audio_grid";
-
-import {
-  render_player_audio_list_item,
-} from "./render_player_audio_list_item";
+  render_player_audio_grid_item,
+} from "./render_player_audio_grid_item";
 
 type optional<T> =
   //
@@ -52,7 +43,7 @@ type optional<T> =
   //
   | undefined;
 
-export const render_player_audio_list =
+export const render_player_audio_grid =
   //
   (
     get_page:
@@ -95,11 +86,6 @@ export const render_player_audio_list =
     ] = createSignal(
       "",
     );
-
-    const {
-      layout,
-      toggle_layout,
-    } = create_layout_switcher();
 
     const [
       pages,
@@ -171,73 +157,41 @@ export const render_player_audio_list =
     return (
       <Switch>
         <Match when={error() === undefined}>
-          <div class="flex items-center gap-2 mb-4">
-            <input
-              //
-              class="px-4 py-2 rounded-2xl outline-none transition border border-zinc-900 focus:border-zinc-800 placeholder:text-zinc-600 grow"
-              //
-              type="search"
-              //
-              placeholder="Search"
-              //
-              value={query()}
-              //
-              onInput={e => set_query(e.target.value)}
-              //
-              spellcheck={false}
-            />
-
-            {render_layout_switcher(layout, toggle_layout)}
-          </div>
-
-          <Show
+          <input
             //
-            when={layout() === "list"}
+            class="px-4 py-2 rounded-2xl outline-none transition border border-zinc-900 focus:border-zinc-800 placeholder:text-zinc-600"
             //
-            fallback={
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-16">
-                <For each={pages()}>
-                  {(
-                    //
-                    item,
-                    //
-                    index,
-                  ) =>
-                    render_player_audio_list_item(
-                      //
-                      item,
-                      //
-                      index,
-                      //
-                      set_error,
-                      //
-                      set_context_menu,
-                    )}
-                </For>
-              </div>
-            }
-          >
-            <ol class="grid gap-1 pb-16">
-              <For each={pages()}>
-                {(
+            type="search"
+            //
+            placeholder="Search"
+            //
+            value={query()}
+            //
+            onInput={e => set_query(e.target.value)}
+            //
+            spellcheck={false}
+          />
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-16">
+            <For each={pages()}>
+              {(
+                //
+                item,
+                //
+                index,
+              ) =>
+                render_player_audio_grid_item(
                   //
                   item,
                   //
                   index,
-                ) =>
-                  render_player_audio_list_item(
-                    //
-                    item,
-                    //
-                    index,
-                    //
-                    set_error,
-                    //
-                    set_context_menu,
-                  )}
-              </For>
-            </ol>
-          </Show>
+                  //
+                  set_error,
+                  //
+                  set_context_menu,
+                )}
+            </For>
+          </div>
 
           <Show when={!end()}>
             <div
