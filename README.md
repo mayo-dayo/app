@@ -43,22 +43,13 @@ Instead, you can download our CLI, which is designed to do all the dirtly work.
 At this step you can configure the server port, whether or not authentication is required, and, optionally, TLS.
 
 ```sh
-# Step 1:
-#
-# Download our CLI utility. It will deal with Docker so you don't have to.
-#
+# Step 1: Download our CLI utility. It will deal with Docker so you don't have to.
 curl -LO https://github.com/mayo-dayo/manage/releases/latest/download/manage
 
-# Step 2:
-#
-# Make it executable.
-#
+# Step 2: Make it executable.
 chmod +x manage
 
-# Step 3:
-#
-# Run the `create` command. This will prompt you to enter some things, and spin up a Docker container.
-#
+# Step 3: Run the `create` command. This will prompt you to enter some things, and spin up a Docker container.
 ./manage create
 ```
 
