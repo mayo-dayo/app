@@ -1,6 +1,93 @@
-## Configuration
+# Mayo メヨ
 
-The server can be configured by using the following environment variables:
+A self-hostable, web-based audio streaming app.
+
+- [Demo](https://mayo.clumsy.fish)
+- [Installation](#installation)
+- [Configuration](#configuration)
+
+#### Features
+
+- Small and fast client, 42.4 kB of brotli-compressed JavaScript.
+- Supports full-text search server-side and client-side.
+- Does not require internet connection, music can be downloaded from the server and played offline.
+
+#### Roadmap
+
+- [ ] Playlists
+- [ ] Instant mix
+- [ ] Better tooling
+
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/f83e802b-63e3-46d0-add0-52c5d4427b60" alt="" />
+</p>
+
+# Installation
+
+Releases of Mayo are published on Github Container Registry.
+
+Obviously, this means that we are going to use Docker.
+
+Since we are going to use Docker, you must have Docker installed on your system.
+
+https://docs.docker.com/engine/install/
+
+Luckily, this is the hardest part of the installation process, because you won't have to dirty your hands by touching Docker directly.
+
+## Creating a Docker container
+
+As I said, you don't have to touch Docker directly. 
+
+Instead, you can download our CLI, which is designed to do all the dirtly work.
+
+At this step you can configure the server port, whether or not authentication is required, and, optionally, TLS.
+
+```sh
+# Step 1:
+#
+# Download our CLI utility. It will deal with Docker so you don't have to.
+#
+curl -LO https://github.com/mayo-dayo/manage/releases/latest/download/manage
+
+# Step 2:
+#
+# Make it executable.
+#
+chmod +x manage
+
+# Step 3:
+#
+# Run the `create` command. This will prompt you to enter some things, and spin up a Docker container.
+#
+./manage create
+```
+
+To verify the server has been created, you can use another CLI command:
+
+```sh
+# List all Mayo instances on the system (you can create multiple).
+./manage ls
+```
+
+## Creating an invite
+
+In Mayo, in order to create a user account, an so-called invite is required. 
+
+Invite determines what permissions, if any, the user will have after creating their account. 
+
+You can limit the number of times a particular invite can be used.
+
+An invite can be created using our CLI utility:
+
+```sh
+./manage invite create
+```
+
+Note: if you receive an error, most likely you just created your server and the database is not yet initialized. To initialize the database, visit the `/sign-in` page and try to sign in with whatever credentials. You will receive an error that the username or the password is incorrect, but this will cause the server to initialize the database.
+
+# Configuration
+
+This is the documentation for how to configure the server without the CLI, but I recommend using the CLI.
 
 ### Authentication
 
