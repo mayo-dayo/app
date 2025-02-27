@@ -461,9 +461,9 @@ describe(
       //
       async () => {
         await create_test_audio("test1", 1, 0); // downloaded, not indexed
-        
+
         await create_test_audio("test2", 1, 1); // downloaded, indexed
-        
+
         const result =
           //
           await storage_audio_get_next_not_downloaded(
@@ -481,11 +481,11 @@ describe(
       async () => {
         // Add a mix of items
         const expected = await create_test_audio("test1", 0, 0); // not downloaded, not indexed - should be returned
-        
+
         await create_test_audio("test2", 1, 0); // downloaded, not indexed
-        
+
         await create_test_audio("test3", 1, 1); // downloaded and indexed
-        
+
         const result =
           //
           await storage_audio_get_next_not_downloaded(
@@ -493,11 +493,11 @@ describe(
           );
 
         expect(result).not.toBeNull();
-        
+
         expect(result?.audio.id).toBe("test1");
-        
+
         expect(result?.is_downloaded).toBe(0);
-        
+
         expect(result).toEqual(expected);
       },
     );
@@ -508,18 +508,18 @@ describe(
       //
       async () => {
         const now = Date.now();
-        
+
         // Create items with specific timestamps to test ordering
         await create_test_audio("test3", 0, 0, now + 200); // not downloaded (newer)
-        
+
         const expected = await create_test_audio("test1", 0, 0, now); // not downloaded (oldest) - should be returned
-        
+
         await create_test_audio("test2", 0, 0, now + 100); // not downloaded (middle)
-        
+
         await create_test_audio("test4", 1, 0, now); // downloaded, not indexed
-        
+
         await create_test_audio("test5", 1, 1, now); // downloaded and indexed
-        
+
         const result =
           //
           await storage_audio_get_next_not_downloaded(
@@ -527,11 +527,11 @@ describe(
           );
 
         expect(result).not.toBeNull();
-        
+
         expect(result?.audio.id).toBe("test1");
-        
+
         expect(result?.time_created).toBe(now);
-        
+
         expect(result).toEqual(expected);
       },
     );
@@ -544,13 +544,13 @@ describe(
         // This is an edge case as indexed items should be downloaded first
         // but we test it for thoroughness
         const now = Date.now();
-        
+
         const expected = await create_test_audio("test1", 0, 0, now); // not downloaded, not indexed
-        
+
         await create_test_audio("test2", 0, 1, now + 100); // not downloaded but indexed (shouldn't be possible)
-        
+
         await create_test_audio("test3", 1, 0, now); // downloaded, not indexed
-        
+
         const result =
           //
           await storage_audio_get_next_not_downloaded(
@@ -558,11 +558,11 @@ describe(
           );
 
         expect(result).not.toBeNull();
-        
+
         expect(result?.audio.id).toBe("test1");
-        
+
         expect(result?.is_downloaded).toBe(0);
-        
+
         expect(result).toEqual(expected);
       },
     );
@@ -573,20 +573,20 @@ describe(
       //
       async () => {
         const now = Date.now();
-        
+
         // Create many items
         for (let i = 0; i < 10; i++) {
           await create_test_audio(`downloaded_${i}`, 1, 1, now + i); // downloaded and indexed
         }
-        
+
         // The item we expect to be returned (oldest not downloaded)
         const expected = await create_test_audio("target", 0, 0, now - 1000);
-        
+
         // More not downloaded items but newer
         for (let i = 0; i < 5; i++) {
           await create_test_audio(`newer_${i}`, 0, 0, now + i + 100); // not downloaded but newer
         }
-        
+
         const result =
           //
           await storage_audio_get_next_not_downloaded(
@@ -594,9 +594,9 @@ describe(
           );
 
         expect(result).not.toBeNull();
-        
+
         expect(result?.audio.id).toBe("target");
-        
+
         expect(result).toEqual(expected);
       },
     );
@@ -608,11 +608,11 @@ describe(
       async () => {
         // Test with negative timestamps (rare but possible edge case)
         await create_test_audio("test1", 1, 0, 100); // downloaded
-        
+
         const expected = await create_test_audio("test2", 0, 0, -1000); // not downloaded, negative timestamp
-        
+
         await create_test_audio("test3", 0, 0, 200); // not downloaded, but newer
-        
+
         const result =
           //
           await storage_audio_get_next_not_downloaded(
@@ -620,11 +620,11 @@ describe(
           );
 
         expect(result).not.toBeNull();
-        
+
         expect(result?.audio.id).toBe("test2");
-        
+
         expect(result?.time_created).toBe(-1000);
-        
+
         expect(result).toEqual(expected);
       },
     );

@@ -62,7 +62,7 @@ To verify the server has been created, you can use another CLI command:
 
 ## Creating an invite
 
-In Mayo, in order to create a user account, a so-called invite is required. 
+In Mayo, in order to create a user account, a so-called invite is required.
 
 Invite determines what permissions, if any, the user will have after creating their account.
 
