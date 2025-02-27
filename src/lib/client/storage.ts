@@ -392,7 +392,7 @@ export const storage_audio_get_next_not_downloaded =
             //
             .index(INDEX_IS_DOWNLOADED_TIME_CREATED)
             //
-            .openCursor(IDBKeyRange.bound([0, -Infinity], [0, Infinity]));
+            .get(IDBKeyRange.bound([0, -Infinity], [0, Infinity]));
 
         req.onerror =
           //
@@ -404,13 +404,13 @@ export const storage_audio_get_next_not_downloaded =
         req.onsuccess =
           //
           () => {
-            const cursor =
+            const value =
               //
-              req.result as IDBCursorWithValue;
+              req.result;
 
-            if (cursor) {
+            if (value) {
               resolve(
-                cursor.value as storage_audio,
+                value as storage_audio,
               );
             } else {
               resolve(
@@ -448,7 +448,7 @@ export const storage_audio_get_next_downloaded_not_indexed =
             //
             .index(INDEX_IS_DOWNLOADED_IS_INDEXED_TIME_CREATED)
             //
-            .openCursor(IDBKeyRange.bound([1, 0, -Infinity], [1, 0, Infinity]));
+            .get(IDBKeyRange.bound([1, 0, -Infinity], [1, 0, Infinity]));
 
         req.onerror =
           //
@@ -460,13 +460,13 @@ export const storage_audio_get_next_downloaded_not_indexed =
         req.onsuccess =
           //
           () => {
-            const cursor =
+            const value =
               //
-              req.result as IDBCursorWithValue;
+              req.result;
 
-            if (cursor) {
+            if (value) {
               resolve(
-                cursor.value as storage_audio,
+                value as storage_audio,
               );
             } else {
               resolve(
