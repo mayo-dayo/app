@@ -1,7 +1,7 @@
 {
   "name": "app",
-  "devDependencies": {
-    "@astrojs/check": "^0.9.4",
+  "type": "module",
+  "dependencies": {
     "@astrojs/solid-js": "^5.0.4",
     "@floating-ui/dom": "^1.6.13",
     "@fontsource/noto-sans-jp": "^5.1.1",
@@ -20,9 +20,7 @@
     "long-press-event": "^2.5.0",
     "mime-types": "^2.1.35",
     "minisearch": "^7.1.2",
-    "oxlint": "^0.15.11",
     "range-parser": "^1.2.1",
-    "search-index": "^5.1.3",
     "solid-js": "^1.9.5",
     "tailwindcss": "^4.0.8",
     "typescript": "^5.7.3",
@@ -31,5 +29,12 @@
     "workbox-precaching": "^7.3.0",
     "workbox-routing": "^7.3.0",
     "workbox-strategies": "^7.3.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@vitest/browser": "^3.0.7",
+    "oxlint": "^0.15.12",
+    "playwright": "^1.50.1",
+    "vitest": "^3.0.7"
   }
 }

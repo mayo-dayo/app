@@ -36,7 +36,7 @@ Luckily, this is the hardest part of the installation process, because you won't
 
 ## Creating a Docker container
 
-As I said, you don't have to touch Docker directly. 
+As I said, you don't have to touch Docker directly.
 
 Instead, you can download our CLI, which is designed to do all the dirtly work.
 
@@ -64,7 +64,7 @@ To verify the server has been created, you can use another CLI command:
 
 In Mayo, in order to create a user account, a so-called invite is required. 
 
-Invite determines what permissions, if any, the user will have after creating their account. 
+Invite determines what permissions, if any, the user will have after creating their account.
 
 You can limit the number of times a particular invite can be used.
 

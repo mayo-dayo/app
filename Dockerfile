@@ -14,7 +14,7 @@ FROM base AS build
 COPY . .
 # https://github.com/oven-sh/bun/issues/16915
 RUN apk add --no-cache libc6-compat
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --release
 RUN bunx --bun astro build
 
 FROM base AS release

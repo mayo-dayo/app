@@ -1,4 +1,4 @@
-default: sync fmt lint check
+default: sync fmt lint check test
 
 fmt:
     dprint fmt
@@ -11,6 +11,9 @@ sync:
 
 check:
     bun run astro check --noSync
+
+test:
+    bun run vitest run
 
 dev:
     bunx --bun astro dev
