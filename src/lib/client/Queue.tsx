@@ -260,6 +260,14 @@ export const Queue: Component =
         );
 
         const [
+          status,
+
+          set_status,
+        ] = createSignal<"playing" | "loading" | "error">(
+          "playing",
+        );
+
+        const [
           stream_url,
         ] = createResource(
           () => player_audio.create_stream_url(),
@@ -315,6 +323,36 @@ export const Queue: Component =
                             }
                         }
                       },
+
+                    playing:
+                      //
+                      () =>
+                        set_status(
+                          "playing",
+                        ),
+
+                    error:
+
+                      //
+                      () =>
+                        set_status(
+                          "error",
+                        ),
+
+                    stalled:
+
+                      //
+                      () =>
+                        set_status(
+                          "loading",
+                        ),
+
+                    waiting:
+                      //
+                      () =>
+                        set_status(
+                          "loading",
+                        ),
 
                     timeupdate:
                       //
@@ -402,7 +440,7 @@ export const Queue: Component =
         const render =
           //
           (): JSX.Element => (
-            <div class="fixed w-full left-0 bottom-0 select-none bg-zinc-950">
+            <div class="fixed left-0 bottom-0 w-full bg-zinc-950">
               <div
                 //
                 class="absolute h-px bg-zinc-800"
@@ -411,7 +449,46 @@ export const Queue: Component =
               />
 
               <div class="border-t border-zinc-900">
-                <div class="mx-auto max-w-md flex px-4 py-2">
+                <div class="relative mx-auto max-w-md flex px-4 py-2">
+                  <div
+                    class={
+                      //
+                      `absolute flex left-0 bottom-0 w-full h-full bg-linear-65 from-zinc-950 via-transparent to-transparent pointer-events-none transition duration-300 ${
+                        //
+                        status() === "playing"
+                          //
+                          ? "opacity-0"
+                          //
+                          : "opacity-100"}`
+                    }
+                  >
+                    <svg
+                      //
+                      class={
+                        //
+                        `ml-[calc((9/2+3+4-2)*var(--spacing))] my-auto w-4 h-4 fill-zinc-300 ${
+                          status() === "loading"
+                            //
+                            ? "animate-spin"
+                            //
+                            : ""
+                        }`.trim()
+                      }
+                      //
+                      viewBox="0 -960 960 960"
+                    >
+                      <Switch>
+                        <Match when={status() === "loading"}>
+                          <path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-155.5t86-127Q252-817 325-848.5T480-880q17 0 28.5 11.5T520-840q0 17-11.5 28.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160q133 0 226.5-93.5T800-480q0-17 11.5-28.5T840-520q17 0 28.5 11.5T880-480q0 82-31.5 155t-86 127.5q-54.5 54.5-127 86T480-80Z" />
+                        </Match>
+
+                        <Match when={status() === "error"}>
+                          <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+                        </Match>
+                      </Switch>
+                    </svg>
+                  </div>
+
                   {render_player_audio(player_audio)}
 
                   <menu class="ml-auto my-auto flex gap-2">
@@ -423,7 +500,9 @@ export const Queue: Component =
                         onClick={shuffle_queue}
                       >
                         <svg
+                          //
                           class="w-4 h-4 m-auto fill-zinc-300"
+                          //
                           viewBox="0 -960 960 960"
                         >
                           <path d="M560-160v-80h104L537-367l57-57 126 126v-102h80v240H560Zm-344 0-56-56 504-504H560v-80h240v240h-80v-104L216-160Zm151-377L160-744l56-56 207 207-56 56Z" />
