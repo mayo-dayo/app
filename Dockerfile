@@ -18,7 +18,6 @@ RUN bun install --frozen-lockfile --release
 RUN bunx --bun astro build
 
 FROM base AS release
-WORKDIR /mayo
 COPY --from=ffmpeg /usr/bin/ffmpeg /usr/bin/ffmpeg
 COPY --from=ffmpeg /usr/bin/ffprobe /usr/bin/ffprobe
 COPY --from=build /mayo/dist/client client
