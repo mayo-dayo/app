@@ -54,6 +54,10 @@ const into_player_audio =
       //
       true;
 
+    const is_downloaded =
+      //
+      storage_audio.is_downloaded === 1;
+
     const should_poll =
       //
       storage_audio.is_downloaded === 0;
@@ -82,6 +86,8 @@ const into_player_audio =
       can_download,
 
       can_remove,
+
+      is_downloaded,
 
       should_poll,
 

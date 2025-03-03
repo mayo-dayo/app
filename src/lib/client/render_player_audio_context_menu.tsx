@@ -156,7 +156,17 @@ export const render_player_audio_context_menu =
                   //
                   () => {
                     batch(() => {
-                      set({ ...player_audio, can_download: false });
+                      set({
+                        ...player_audio,
+
+                        can_download:
+                          //
+                          false,
+
+                        is_downloaded:
+                          //
+                          true,
+                      });
 
                       close();
                     });

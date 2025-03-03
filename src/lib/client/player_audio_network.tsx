@@ -102,6 +102,10 @@ const into_player_audio =
             //
             navigator.onLine && audio.processing === 0 && (user !== undefined && (user.perms & perms_can_remove) !== 0);
 
+          const is_downloaded =
+            //
+            is_downloaded_map[index] === 1;
+
           const should_poll =
             //
             navigator.onLine && audio.processing === 1;
@@ -120,7 +124,7 @@ const into_player_audio =
 
           const create_stream_url =
             //
-            is_downloaded_map[index] === 1
+            is_downloaded
               //
               ? () => opfs_audio_get_stream_file_url(audio.id)
               //
@@ -134,6 +138,8 @@ const into_player_audio =
             can_download,
 
             can_remove,
+
+            is_downloaded,
 
             should_poll,
 

@@ -25,6 +25,10 @@ export type player_audio =
       //
       boolean;
 
+    is_downloaded:
+      //
+      boolean;
+
     should_poll:
       //
       boolean;
