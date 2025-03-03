@@ -26,7 +26,7 @@ export const database_migrate =
     database.transaction(() => {
       let current_version = user_version;
 
-      const new_version = 1;
+      const new_version = 2;
 
       while (current_version < new_version) {
         const migration = migrations[`./migrations/${current_version}.sql`] as any;

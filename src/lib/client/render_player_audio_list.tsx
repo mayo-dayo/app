@@ -25,23 +25,9 @@ import type {
   player_audio,
 } from "./player_audio";
 
-import type {
-  player_audio_context_menu,
-} from "./player_audio_context_menu";
-
-import {
-  render_player_audio_context_menu,
-} from "./render_player_audio_context_menu";
-
 import {
   render_player_audio_list_item,
 } from "./render_player_audio_list_item";
-
-type optional<T> =
-  //
-  | T
-  //
-  | undefined;
 
 export const render_player_audio_list =
   //
@@ -64,19 +50,7 @@ export const render_player_audio_list =
 
       set_error,
     ] = createSignal<
-      optional<
-        any
-      >
-    >();
-
-    const [
-      context_menu,
-
-      set_context_menu,
-    ] = createSignal<
-      optional<
-        player_audio_context_menu
-      >
+      any | undefined
     >();
 
     const [
@@ -187,8 +161,6 @@ export const render_player_audio_list =
                   index,
                   //
                   set_error,
-                  //
-                  set_context_menu,
                 )}
             </For>
           </ol>
@@ -198,10 +170,6 @@ export const render_player_audio_list =
               // @ts-ignore
               ref={setEl}
             />
-          </Show>
-
-          <Show when={context_menu()}>
-            {render_player_audio_context_menu(context_menu()!)}
           </Show>
         </Match>
 

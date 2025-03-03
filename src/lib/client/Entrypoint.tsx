@@ -15,6 +15,11 @@ import {
 } from "solid-js";
 
 import {
+  ContextMenuProvider,
+  use_context_menu,
+} from "./context_menu";
+
+import {
   UserProvider,
 } from "./user";
 
@@ -61,9 +66,13 @@ export const Entrypoint =
             //
             values={[
               [UserProvider, user],
+
+              ContextMenuProvider,
             ]}
           >
             <Wrapped {...(others as P)} />
+
+            {use_context_menu()!.render()}
           </MultiProvider>
         );
       };

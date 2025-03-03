@@ -15,8 +15,10 @@ import type {
 } from "solid-js";
 
 import {
+  batch,
   createEffect,
   createSignal,
+  For,
   getOwner,
   onCleanup,
   onMount,
@@ -24,16 +26,19 @@ import {
   Show,
 } from "solid-js";
 
+import {
+  use_context_menu,
+} from "./context_menu";
+
 import type {
   player_audio,
 } from "./player_audio";
 
-import type {
-  player_audio_context_menu,
-} from "./player_audio_context_menu";
-
 import {
+  queue_play_later,
+  queue_play_next,
   queue_play_now,
+  queue_shuffle_in,
 } from "./queue_rpc";
 
 import {
@@ -46,15 +51,6 @@ type set_error =
     any:
       //
       any,
-  ) => void;
-
-type set_context_menu =
-  //
-  (
-    //
-    context_menu:
-      //
-      player_audio_context_menu | undefined,
   ) => void;
 
 export const render_player_audio_list_item =
@@ -71,10 +67,6 @@ export const render_player_audio_list_item =
     set_error:
       //
       set_error,
-    //
-    set_context_menu:
-      //
-      set_context_menu,
   ): JSX.Element | null => {
     const [
       latest,
@@ -137,21 +129,9 @@ export const render_player_audio_list_item =
       }
     });
 
-    const handle_click =
+    const context_menu =
       //
-      () => {
-        const player_audio =
-          //
-          latest();
-
-        if (
-          player_audio?.can_play
-        ) {
-          queue_play_now(
-            player_audio,
-          );
-        }
-      };
+      use_context_menu()!;
 
     const context_menu_open =
       //
@@ -165,26 +145,203 @@ export const render_player_audio_list_item =
           //
           number,
       ) =>
-        set_context_menu(
+        context_menu.set_state(
+          //
           {
-            player_audio_signal:
+            coordinates:
               //
-              [
-                latest,
+              {
+                x,
 
-                set_latest,
-              ],
+                y,
+              },
 
-            x,
-
-            y,
-
-            close:
+            body:
               //
-              () =>
-                set_context_menu(
-                  undefined,
-                ),
+              () => {
+                const player_audio =
+                  //
+                  latest();
+
+                if (player_audio === null) {
+                  return;
+                }
+
+                const items =
+                  //
+                  [];
+
+                if (player_audio.can_play) {
+                  items.push(
+                    {
+                      handler:
+                        //
+                        () => {
+                          queue_play_now(player_audio);
+
+                          context_menu.set_state(undefined);
+                        },
+
+                      icon:
+                        //
+                        <path d="M120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Zm520 520v-320l240 160-240 160Z" />,
+
+                      label:
+                        //
+                        "Play now",
+                    },
+                    {
+                      handler:
+                        //
+                        () => {
+                          queue_play_next(player_audio);
+
+                          context_menu.set_state(undefined);
+                        },
+
+                      icon:
+                        //
+                        <path d="M640-160q-50 0-85-35t-35-85q0-50 35-85t85-35q11 0 21 1.5t19 6.5v-328h200v80H760v360q0 50-35 85t-85 35ZM120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Z" />,
+
+                      label:
+                        //
+                        "Play next",
+                    },
+                    {
+                      handler:
+                        //
+                        () => {
+                          queue_play_later(player_audio);
+
+                          context_menu.set_state(undefined);
+                        },
+
+                      icon:
+                        //
+                        <path d="M120-320v-80h280v80H120Zm0-160v-80h440v80H120Zm0-160v-80h440v80H120Zm520 480v-160H480v-80h160v-160h80v160h160v80H720v160h-80Z" />,
+                      label:
+                        //
+                        "Play later",
+                    },
+                    {
+                      handler:
+                        //
+                        () => {
+                          queue_shuffle_in(player_audio);
+
+                          context_menu.set_state(undefined);
+                        },
+
+                      icon:
+                        //
+                        <path d="M560-160v-80h104L537-367l57-57 126 126v-102h80v240H560Zm-344 0-56-56 504-504H560v-80h240v240h-80v-104L216-160Zm151-377L160-744l56-56 207 207-56 56Z" />,
+
+                      label:
+                        //
+                        "Shuffle in",
+                    },
+                  );
+                }
+
+                if (player_audio.can_download) {
+                  items.push(
+                    //
+                    {
+                      handler:
+                        //
+                        () => {
+                          batch(() => {
+                            set_latest(player_audio => {
+                              return (
+                                player_audio === null
+                                  //
+                                  ? null
+                                  //
+                                  : {
+                                    ...player_audio,
+
+                                    can_download:
+                                      //
+                                      false,
+
+                                    is_downloaded:
+                                      //
+                                      true,
+                                  }
+                              );
+                            });
+
+                            context_menu.set_state(undefined);
+                          });
+
+                          player_audio.download();
+                        },
+
+                      icon:
+                        //
+                        <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />,
+
+                      label:
+                        //
+                        "Download",
+                    },
+                  );
+                }
+
+                if (player_audio.can_remove) {
+                  items.push(
+                    //
+                    {
+                      handler:
+                        //
+                        () => {
+                          batch(() => {
+                            context_menu.set_state(undefined);
+
+                            set_latest(null);
+                          });
+
+                          player_audio.remove();
+                        },
+                      icon:
+                        //
+                        <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />,
+
+                      label:
+                        //
+                        "Remove",
+                    },
+                  );
+                }
+
+                return (
+                  <For each={items}>
+                    {item => (
+                      <li class="first:rounded-t last:rounded-b transition hover:bg-zinc-900 active:bg-zinc-800">
+                        <button
+                          //
+                          class="w-full p-3 flex items-center gap-1 outline-none select-none cursor-pointer"
+                          //
+                          onClick={item.handler}
+                        >
+                          <svg
+                            //
+                            class="w-4 h-4 fill-zinc-300"
+                            //
+                            viewBox="0 -960 960 960"
+                          >
+                            {item.icon}
+                          </svg>
+
+                          <div class="grow text-center">
+                            {item.label}
+                          </div>
+                        </button>
+                      </li>
+                    )}
+                  </For>
+                );
+              },
           },
         );
 
@@ -205,6 +362,22 @@ export const render_player_audio_list_item =
           //
           e.clientY,
         );
+      };
+
+    const handle_click =
+      //
+      () => {
+        const player_audio =
+          //
+          latest();
+
+        if (
+          player_audio?.can_play
+        ) {
+          queue_play_now(
+            player_audio,
+          );
+        }
       };
 
     const render =
