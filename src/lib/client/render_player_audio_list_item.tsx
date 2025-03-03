@@ -296,7 +296,7 @@ export const render_player_audio_list_item =
                         //
                         () => {
                           batch(() => {
-                            close();
+                            context_menu.set_state(undefined);
 
                             set_latest(null);
                           });
