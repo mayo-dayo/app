@@ -22,6 +22,14 @@ export type storage_audio =
       0 | 1;
   };
 
+export type storage_playlist =
+  //
+  {
+    playlist:
+      //
+      playlist;
+  };
+
 export type storage_connection =
   //
   IDBDatabase;
@@ -60,7 +68,7 @@ export const storage_connect =
             //
             "audio",
             //
-            1,
+            2,
           );
 
         req.onerror =
@@ -132,6 +140,13 @@ export const storage_connect =
                     INDEX_IS_DOWNLOADED_IS_INDEXED_TIME_CREATED,
                     //
                     ["is_downloaded", "is_indexed", "time_created"],
+                  );
+
+                  break;
+
+                case 1:
+                  const object_store = connection.createObjectStore(
+                    //
                   );
 
                   break;

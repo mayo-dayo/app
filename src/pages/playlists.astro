@@ -1,0 +1,21 @@
+---
+import {
+  List,
+} from "@/lib/client/Playlists";
+
+import Player from "@/lib/client/Player.astro";
+---
+
+<Player>
+  <noscript>
+    <div class="p-2 text-center text-zinc-400">
+      This feature requires JavaScript.
+    </div>
+  </noscript>
+
+  <List
+    client:only="solid-js"
+
+    user={Astro.locals.user}
+  />
+</Player>
